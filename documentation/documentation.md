@@ -1,294 +1,374 @@
-# 🧩 SariSariStock: Sales & Inventory Management System
+```markdown
+# 🍕 Pizza Stock Management & On-Site Ordering System (Pure Django)
 
-A complete **Sales, Inventory, Business Intelligence (BI), and Forecasting System** for small retail stores — built using **Django + Python**.
+## 🧩 Overview
+A full-featured Django web application for a **multi-branch pizza shop** with centralized inventory, forecasting, BI, and on-site ordering via QR code.
 
----
+**Key Features**
+- Multi-branch inventory management  
+- Sales tracking and forecasting  
+- Business Intelligence (BI) dashboards  
+- QR-based on-site ordering system  
+- Demo online payments (GCash/PayMaya)  
+- Staff & admin roles for control and analytics  
 
-## 📘 Overview
-
-**Project Name:** SariSariStock  
-**Purpose:** Simplify and automate sales, inventory, and reporting for a sari-sari store.  
-**Tech Stack:** Django (Python), Tailwind/Bootstrap, Chart.js, Pandas, Scikit-learn, ReportLab  
-**Users:**  
-- **Admin / Owner (Tita)** — full access, BI dashboard, forecasting, reports  
-- **Staff / Cashier** — POS, receipts, daily sales view
-
----
-
-## ⚙️ System Functions
-
-### 1. 🔐 Authentication & User Management
-**Functions**
-- User login/logout (Django Auth)
-- Role-based access (Admin, Staff)
-- CRUD for user accounts (Admin only)
-- Password change/reset
-- Optional profile info and avatar
-
-**Model**
-- `User`
-  - username, password, role [admin, staff], contact_info
+Everything is **pure Django** — no React, no external frontend frameworks.
 
 ---
 
-### 2. 📦 Product & Inventory Management
-**Functions**
-- CRUD: Add, edit, delete products
-- Group products by category
-- Manage supplier info (optional)
-- Track stock quantity
-- Update stock (restock, adjustment)
-- Auto low-stock alerts
-- Search by name or barcode
-- Import/export product list (CSV/Excel)
+## 🧱 Tech Stack
 
-**Models**
-- `Category`
-- `Product`
-  - name, category (FK), barcode, price, cost_price, unit, stock_qty, reorder_level
-- `Supplier` *(optional)*
-- `StockTransaction`
-  - product, quantity_change, remarks (“restock”, “adjustment”), date
+| Layer | Tool |
+|-------|------|
+| Web Framework | Django 5.x |
+| Templates/UI | Django Templates + TailwindCSS + HTMX (optional) |
+| Database | PostgreSQL |
+| Background Jobs | `django-crontab` or Celery |
+| Charts | Chart.js |
+| Payments | Demo GCash / PayMaya simulation |
+| QR Codes | `qrcode` Python library |
 
 ---
 
-### 3. 💰 Point of Sale (POS) / Sales Management
-**Functions**
-- POS kiosk interface (clean, fast)
-- Product search (by name/barcode)
-- Add to cart, edit quantity, remove
-- Auto-compute totals, tax, change
-- Generate and print receipts (PDF)
-- Save sales to database
-- Auto-update stock after sale
-- Staff can view daily sales summary
-- Admin can filter by cashier/date
+## 🗂️ Project Structure
 
-**Models**
-- `Sale`
-  - cashier (FK → User), total_amount, payment_type, date_time
-- `SaleItem`
-  - sale (FK), product (FK), quantity, price, subtotal
+```
 
----
+pizza_stock/
+├── config/               # Settings, URLs, WSGI, ASGI
+├── users/                # Custom user model, roles, branch mapping
+├── inventory/            # SKU, stock, transactions
+├── sales/                # Sales records
+├── orders/               # On-site ordering + payments
+├── forecast/             # Demand prediction
+├── reports/              # Dashboards and BI
+├── templates/            # HTML templates
+├── static/               # Tailwind, Chart.js, QR images
+└── manage.py
 
-### 4. 📊 Dashboard & Business Intelligence (BI)
-**Functions**
-- Admin dashboard with charts and KPIs:
-  - Total Sales (today, week, month)
-  - Profit summary
-  - Top 5 best-selling products
-  - Low-stock alerts
-  - Category performance
-  - Sales by cashier
-  - Sales trends (daily/monthly)
-- Filter by date range
-- Auto-refresh using HTMX or AJAX
-
-**Tools**
-- Django ORM for aggregation
-- Pandas for analysis
-- Chart.js or Plotly for visualization
-
----
-
-### 5. 🧮 Forecasting & Analytics
-**Functions**
-- Forecast next 7 / 30 days of sales
-- Predict top-selling products
-- Suggest restocks based on demand trends
-- Display forecast charts (actual vs. predicted)
-- Export forecast summary (PDF/Excel)
-
-**Libraries**
-- Pandas (data prep)
-- Scikit-learn (Linear Regression / ARIMA)
-- Chart.js or Matplotlib (charts)
-
-**Model**
-- `ForecastResult`
-  - date_generated, period (7/30 days), predicted_sales, method_used
-
----
-
-### 6. 📑 Reports & Exports
-**Functions**
-- Generate reports in PDF/Excel:
-  - Daily / Weekly / Monthly Sales
-  - Inventory Summary
-  - Low-stock Products
-  - Staff Sales Summary
-  - Profit/Loss Report
-- Filter by date or user
-- Auto-format with store info and totals
-- Downloadable and printable
-
-**Libraries**
-- `ReportLab` — PDF
-- `openpyxl` / `xlsxwriter` — Excel
-
----
-
-### 7. 🔔 Alerts & Notifications
-**Functions**
-- Low-stock alerts (dashboard)
-- Success/error flash messages
-- Optional email alert to admin for out-of-stock
-- “Sales Target Achieved” notification (optional fun metric)
-
----
-
-### 8. ⚙️ Settings & Configuration
-**Functions**
-- Store info setup (name, logo, address)
-- Tax rate configuration
-- Receipt footer text
-- Currency and format options
-- Toggle features (forecasting, supplier tracking)
-- Database backup/download (SQLite/Postgres)
-
-**Model**
-- `SystemSettings`
-
----
-
-### 9. 🧾 Receipt Generation & Printing
-**Functions**
-- Auto-generate printable receipt per sale
-- Include store name, date/time, cashier, items, totals, change
-- Compact format for 58mm/80mm printers
-- Downloadable PDF receipts
-
-**Library**
-- ReportLab (PDF generation)
-
----
-
-### 10. 🔍 Search & Filtering
-**Functions**
-- Global search for products, sales, users
-- Advanced filters (date, category, cashier, supplier)
-- Pagination and sorting (Django + HTMX)
-
----
-
-### 11. 🖥️ User Interface / Experience Design
-**Goals**
-- Fast, clean, responsive (usable on tablet/phone)
-- Consistent layout (dashboard, sidebar, modals)
-- Accessible design (clear buttons, icons, contrast)
-- Tailwind CSS or Bootstrap 5
-- Heroicons / FontAwesome icons
-
-**Page Layouts**
-- `/dashboard/`
-- `/pos/`
-- `/inventory/`
-- `/reports/`
-- `/forecast/`
-- `/users/`
-- `/settings/`
-
----
-
-### 12. 🧰 Utilities & Backend Services
-**Functions**
-- Reusable utilities:
-  - Inventory stock update
-  - Sales summaries
-  - Report generation
-  - Forecast computations
-- Optional background jobs (Celery) for heavy tasks
-- API endpoints for charts and data
-
----
-
-## 🗄️ Database Schema Overview
-
-```text
-User
- ├── username
- ├── role [admin, staff]
- └── contact_info
-
-Category
- └── name
-
-Product
- ├── name
- ├── category (FK)
- ├── barcode
- ├── price
- ├── cost_price
- ├── unit
- ├── stock_qty
- ├── reorder_level
- └── date_added
-
-Supplier (optional)
- ├── name
- ├── contact
- └── address
-
-StockTransaction
- ├── product (FK)
- ├── quantity_change (+/-)
- ├── remarks
- └── date
-
-Sale
- ├── cashier (FK → User)
- ├── total_amount
- ├── payment_type
- └── date_time
-
-SaleItem
- ├── sale (FK)
- ├── product (FK)
- ├── quantity
- ├── price
- └── subtotal
-
-ForecastResult
- ├── date_generated
- ├── period (7/30 days)
- ├── predicted_sales
- └── method_used
-
-SystemSettings
- ├── store_name
- ├── logo
- ├── tax_rate
- ├── receipt_footer
- └── backup_path
 ````
 
 ---
 
-## 🧭 Summary of Key Functional Areas
+## ⚙️ Core Django Apps and Functions
 
-| Module             | Description                                     |
-| ------------------ | ----------------------------------------------- |
-| **Authentication** | User login/logout, roles                        |
-| **Inventory**      | Product CRUD, categories, stock updates, alerts |
-| **POS**            | Sales, receipts, auto stock deduction           |
-| **Dashboard (BI)** | Charts, KPIs, sales/profit tracking             |
-| **Forecasting**    | Predict sales/demand using past data            |
-| **Reports**        | Export PDF/Excel for all key modules            |
-| **Settings**       | Store configuration and backups                 |
-| **UI/UX**          | Tailwind/Bootstrap, responsive, mobile-ready    |
+### 1. `users` — Authentication & Roles
+**Functions**
+- Custom `User` model linked to one or more `Branch`
+- Role groups: `Admin`, `Manager`, `Staff`
+- Middleware for branch context
+- Permissions restrict access by branch
 
 ---
 
-## ✅ Final Outcome
+### 2. `inventory` — SKU & Stock Management
+**Functions**
+- CRUD for pizza SKUs (name, price, category)
+- Maintain per-branch stock via `InventoryRecord`
+- Log all movements in `StockTransaction`
 
-A **modern, full-featured Django system** with:
+```python
+def apply_stock_transaction(branch, sku, qty, txn_type, user):
+    """Atomic stock update + create StockTransaction record."""
+````
 
-* Smooth POS workflow
-* Accurate stock tracking
-* Clean analytics dashboard
-* Smart forecasting
-* PDF & Excel reporting
-* Tita-friendly interface (simple yet powerful)
+Transaction types: `restock`, `sale`, `transfer`, `waste`
 
-This plan serves as the **complete specification** and **AI-readable base document** for development, generation, and system design.
+Auto low-stock detection: `if qty < safety_stock`
+
+---
+
+### 3. `sales` — Sales Tracking
+
+**Functions**
+
+* `record_sale(branch, sku, qty, price, user)`
+
+  * Creates a `Sale` record and deducts inventory
+* Aggregate daily sales → used by forecast + reports
+* Connects with `orders` app for customer orders
+
+---
+
+### 4. `orders` — On-Site Ordering System
+
+Handles **customer-facing** QR orders and **staff dashboards**.
+
+**Core Models**
+
+```python
+class Order(models.Model):
+    STATUS = [
+        ('pending', 'Pending Payment'),
+        ('paid', 'Paid'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    PAYMENT = [
+        ('counter', 'Pay at Counter'),
+        ('online', 'Online Payment'),
+    ]
+    branch = models.ForeignKey('inventory.Branch', on_delete=models.CASCADE)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_method = models.CharField(max_length=20, choices=PAYMENT)
+    status = models.CharField(max_length=20, choices=STATUS, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+```
+
+```python
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    sku = models.ForeignKey('inventory.SKU', on_delete=models.CASCADE)
+    qty = models.PositiveIntegerField()
+    price = models.DecimalField(max_digits=8, decimal_places=2)
+```
+
+**Public URLs**
+
+* `/order/<branch_code>/` → display active menu
+* `/order/cart/` → session-based cart
+* `/order/checkout/` → choose payment (counter/online)
+* `/order/confirm/` → finalize order
+
+**Staff URLs**
+
+* `/orders/dashboard/` → all branch orders
+* `/orders/<id>/update/` → mark as paid/completed
+
+**Flow**
+
+1. Customer scans QR (→ `/order/<branch_code>/`)
+2. Selects items, proceeds to checkout
+3. Chooses payment type:
+
+   * **Counter** → order saved as `pending`
+   * **Online** → simulate payment gateway → auto-marks `paid`
+4. When marked `paid`:
+
+   ```python
+   apply_stock_transaction(branch, sku, qty, 'sale', user=None)
+   ```
+5. Staff marks order `completed` → finalizes sale
+
+---
+
+### 5. `payments` (within `orders`) — Demo Online Payment
+
+Simulated flow for GCash/PayMaya.
+
+**Functions**
+
+```python
+def initiate_payment(order):
+    """Creates fake payment reference and redirects to demo page."""
+```
+
+```python
+def payment_webhook(request):
+    """Simulated callback marking order as paid."""
+```
+
+Routes:
+
+* `/payment/initiate/`
+* `/payment/success/`
+* `/payment/fail/`
+
+> ⚠️ This is a **demonstration** integration — no actual payment API calls.
+
+---
+
+### 6. `forecast` — Demand Prediction
+
+**Functions**
+
+* Aggregate last 7-day sales per SKU per branch
+* Simple moving average forecast:
+
+```python
+def moving_average_forecast(series, window=7):
+    return series.rolling(window).mean().iloc[-1]
+```
+
+* Save results to `Forecast` model
+* Run via cron (`python manage.py run_forecast`)
+
+---
+
+### 7. `reports` — BI Dashboards
+
+**Functions**
+
+* Generate analytics:
+
+  * Sales per day/branch
+  * Top SKUs
+  * Stock turnover
+  * Forecast vs Actual
+* Render via Chart.js charts in Django templates
+
+Example:
+
+```html
+<canvas id="salesChart"></canvas>
+<script>
+const ctx = document.getElementById('salesChart');
+new Chart(ctx, {type:'bar', data:{labels:..., datasets:...}});
+</script>
+```
+
+---
+
+## 🖼️ QR Code Generation
+
+Each branch generates its own QR code pointing to `/order/<branch_code>/`.
+
+```python
+import qrcode
+
+def generate_branch_qr(branch):
+    url = f"https://pizzashop.com/order/{branch.code}/"
+    img = qrcode.make(url)
+    img.save(f"static/qr/{branch.code}.png")
+```
+
+Show QR codes on tables or posters for customers.
+
+---
+
+## 🔔 Notifications
+
+**Functions**
+
+* `send_low_stock_alerts()` → email to branch manager
+* `notify_new_order()` → staff dashboard refresh via HTMX polling
+* Optional Telegram/email integration for alerts
+
+---
+
+## 🔁 Background Jobs
+
+All automated jobs scheduled using `django-crontab`.
+
+| Job                          | Description               |
+| ---------------------------- | ------------------------- |
+| `aggregate_sales_daily()`    | Summarize daily sales     |
+| `run_forecast()`             | Update forecasts          |
+| `auto_close_unpaid_orders()` | Cancel old pending orders |
+| `send_low_stock_alerts()`    | Alert for low inventory   |
+
+```bash
+python manage.py crontab add
+python manage.py crontab show
+```
+
+---
+
+## 📈 Inter-App Integrations
+
+| From       | To          | Trigger                     |
+| ---------- | ----------- | --------------------------- |
+| `orders`   | `sales`     | On paid order → create Sale |
+| `sales`    | `inventory` | Deduct SKU stock            |
+| `sales`    | `forecast`  | Feed daily sales data       |
+| `forecast` | `reports`   | BI visualization            |
+
+---
+
+## 🔒 Security
+
+* Django `Groups` and `Permissions` control access
+* Branch-level filters per user
+* CSRF + HTTPS enforced
+* Payment webhook signature check (demo)
+* All stock changes logged in `StockTransaction`
+
+---
+
+## 🧪 Testing
+
+| Area        | Test Type                            |
+| ----------- | ------------------------------------ |
+| Inventory   | CRUD + atomic stock updates          |
+| Orders      | Cart → Checkout → Payment simulation |
+| Forecast    | Calculation accuracy                 |
+| BI          | Chart data correctness               |
+| Permissions | Role & branch restrictions           |
+
+---
+
+## 🚀 Deployment
+
+**Functions**
+
+* Gunicorn + Nginx deployment
+* PostgreSQL database
+* `collectstatic` for CSS/JS
+* Cron jobs for daily tasks
+* Regular DB backups (`pg_dump`)
+
+---
+
+## 🧱 Directory Scaffold
+
+```
+inventory/
+    models.py
+    views.py
+    admin.py
+    utils.py
+sales/
+    models.py
+    views.py
+    services.py
+orders/
+    models.py
+    views.py
+    payments.py
+    urls.py
+forecast/
+    models.py
+    tasks.py
+    management/commands/run_forecast.py
+reports/
+    views.py
+    templates/reports/
+users/
+    models.py
+    views.py
+    middleware.py
+config/
+    settings.py
+    urls.py
+    wsgi.py
+    asgi.py
+```
+
+---
+
+## ✅ Core Functions Summary
+
+| Function                     | Responsibility                  |
+| ---------------------------- | ------------------------------- |
+| `apply_stock_transaction()`  | Atomic inventory update         |
+| `record_sale()`              | Create sale + adjust stock      |
+| `create_order()`             | Save new order + items          |
+| `mark_order_paid()`          | Update status + stock deduction |
+| `generate_branch_qr()`       | Generate branch QR code         |
+| `initiate_payment()`         | Start demo payment flow         |
+| `payment_webhook()`          | Simulate payment callback       |
+| `moving_average_forecast()`  | Forecast demand                 |
+| `aggregate_sales_daily()`    | Summarize for BI/forecast       |
+| `send_low_stock_alerts()`    | Notify managers                 |
+| `auto_close_unpaid_orders()` | Cancel stale orders             |
+
+---
+
+## 🧠 Notes
+
+* 100% **Pure Django** (no React, no API frontend)
+* On-site ordering works with QR scan or manual link
+* Online payment is simulated only (GCash/PayMaya demo)
+* Fully extendable to real payment APIs later
+* Can run standalone or scaled to multi-branch operations
