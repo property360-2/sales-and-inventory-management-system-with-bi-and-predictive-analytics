@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - Pizza Stock Management{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="gradient-bg px-6 py-8">
+            <div class="flex items-center">
+                <div class="h-20 w-20 rounded-full bg-white flex items-center justify-center text-3xl font-bold text-indigo-600">
+                    {{ user.first_name.0|default:user.username.0|upper }}
+                </div>
+                <div class="ml-6 text-white">
+                    <h1 class="text-2xl font-bold">{{ user.get_full_name|default:user.username }}</h1>
+                    <p class="text-sm opacity-90">{{ user.get_role_display }}</p>
+                    <p class="text-sm opacity-75">{{ user.email }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="px-6 py-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-store mr-2"></i>
+                Your Branches
+            </h2>
+
+            {% if branches %}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {% for branch in branches %}
+                <div class="border border-gray-200 rounded-lg p-4 hover:border-indigo-500 transition {% if request.current_branch.id == branch.id %}border-indigo-500 bg-indigo-50{% endif %}">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-gray-900">{{ branch.name }}</h3>
+                            <p class="text-sm text-gray-600 mt-1">
+                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                {{ branch.address }}
+                            </p>
+                            <p class="text-sm text-gray-600 mt-1">
+                                <i class="fas fa-phone mr-1"></i>
+                                {{ branch.phone }}
+                            </p>
+                        </div>
+                        {% if request.current_branch.id != branch.id %}
+                        <a href="{% url 'users:switch_branch' branch.id %}" 
+                           class="px-3 py-1 text-sm bg-indigo-600 text-white rounded hover:bg-indigo-700 transition">
+                            Switch
+                        </a>
+                        {% else %}
+                        <span class="px-3 py-1 text-sm bg-green-100 text-green-800 rounded font-semibold">
+                            Active
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-8">
+                <i class="fas fa-exclamation-circle text-4xl mb-2"></i><br>
+                No branches assigned. Please contact an administrator.
+            </p>
+            {% endif %}
+        </div>
+
+        <div class="px-6 py-6 bg-gray-50 border-t">
+            <h2 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-info-circle mr-2"></i>
+                Account Information
+            </h2>
+            <dl class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Username</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ user.username }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Email</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ user.email }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Role</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ user.get_role_display }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm font-medium text-gray-500">Joined</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ user.date_joined|date:"M d, Y" }}</dd>
+                </div>
+            </dl>
+        </div>
+    </div>
+</div>
+{% endblock %}

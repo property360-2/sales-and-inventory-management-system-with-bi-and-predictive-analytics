@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Processing Payment - {{ branch.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center px-4 py-12">
+        <div class="max-w-md w-full">
+            <div class="bg-white rounded-lg shadow-xl overflow-hidden">
+                <!-- Header -->
+                <div class="gradient-bg px-6 py-8 text-center text-white">
+                    <div
+                        class="h-20 w-20 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i
+                            class="fas {% if payment.payment_method == 'gcash' %}fa-mobile-alt{% else %}fa-credit-card{% endif %} text-4xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold mb-2">{{ payment.get_payment_method_display|upper }}</h1>
+                    <p class="text-sm opacity-90">Payment Gateway Demo</p>
+                </div>
+
+                <!-- Payment Details -->
+                <div class="p-6">
+                    <div class="text-center mb-6">
+                        <p class="text-sm text-gray-600 mb-2">Amount to Pay</p>
+                        <p class="text-4xl font-bold text-indigo-600">₱{{ order.total_amount }}</p>
+                        <p class="text-sm text-gray-500 mt-2">Order #{{ order.order_number }}</p>
+                    </div>
+
+                    <div class="border-t border-b border-gray-200 py-4 mb-6">
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Reference:</span>
+                                <span class="font-mono font-semibold text-gray-900">{{ payment.reference_number
+                                    }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Merchant:</span>
+                                <span class="font-semibold text-gray-900">{{ branch.name }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Demo Instructions -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <div class="flex">
+                            <i class="fas fa-info-circle text-blue-600 mr-3 mt-1"></i>
+                            <div class="text-sm text-blue-800">
+                                <p class="font-semibold mb-1">⚠️ Demo Mode</p>
+                                <p>This is a simulated payment gateway. Click the buttons below to simulate success or
+                                    failure.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Demo Buttons -->
+                    <div class="space-y-3">
+                        <a href="{% url 'orders_public:payment_success' payment.id %}"
+                            class="block w-full bg-green-600 text-white text-center py-4 rounded-lg font-bold text-lg hover:bg-green-700 transition shadow-lg">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Simulate Successful Payment
+                        </a>
+
+                        <a href="{% url 'orders_public:payment_failed' payment.id %}"
+                            class="block w-full bg-red-600 text-white text-center py-4 rounded-lg font-bold text-lg hover:bg-red-700 transition shadow-lg">
+                            <i class="fas fa-times-circle mr-2"></i>
+                            Simulate Failed Payment
+                        </a>
+                    </div>
+
+                    <p class="text-xs text-gray-500 text-center mt-6">
+                        In a real implementation, this page would redirect to the actual payment gateway (GCash/PayMaya)
+                        for secure payment processing.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="mt-6 bg-white rounded-lg shadow-lg p-4">
+                <h3 class="text-sm font-semibold text-gray-900 mb-3">Order Summary</h3>
+                <div class="space-y-2">
+                    {% for item in order.items.all %}
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">{{ item.sku.name }} ×{{ item.quantity }}</span>
+                        <span class="text-gray-900 font-medium">₱{{ item.get_total }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

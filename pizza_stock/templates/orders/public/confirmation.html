@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed - {{ branch.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .success-animation {
+            animation: scaleIn 0.5s ease-out;
+        }
+        @keyframes scaleIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen flex items-center justify-center px-4 py-12">
+        <div class="max-w-2xl w-full">
+            <!-- Success Icon -->
+            <div class="text-center mb-8">
+                <div class="inline-block success-animation">
+                    <div class="h-24 w-24 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-check text-white text-5xl"></i>
+                    </div>
+                </div>
+                <h1 class="text-4xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
+                <p class="text-lg text-gray-600">Thank you for your order</p>
+            </div>
+
+            <!-- Order Details Card -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-6">
+                <div class="gradient-bg px-6 py-4 text-white">
+                    <h2 class="text-xl font-bold">Order #{{ order.order_number }}</h2>
+                    <p class="text-sm opacity-90">{{ order.created_at|date:"M d, Y - H:i" }}</p>
+                </div>
+
+                <div class="p-6">
+                    <!-- Order Status -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-gray-700">Status:</span>
+                            <span class="px-4 py-2 inline-flex text-sm leading-5 font-semibold rounded-full
+                                {% if order.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                {% elif order.status == 'paid' %}bg-green-100 text-green-800
+                                {% elif order.status == 'preparing' %}bg-blue-100 text-blue-800
+                                {% elif order.status == 'ready' %}bg-purple-100 text-purple-800
+                                {% elif order.status == 'completed' %}bg-gray-100 text-gray-800
+                                {% endif %}">
+                                <i class="fas fa-circle mr-2 animate-pulse"></i>
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        {% if order.status == 'pending' and order.payment_method == 'counter' %}
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
+                            <div class="flex">
+                                <i class="fas fa-info-circle text-yellow-600 mr-3 mt-1"></i>
+                                <div>
+                                    <h3 class="text-sm font-semibold text-yellow-800 mb-1">Payment Required</h3>
+                                    <p class="text-sm text-yellow-700">Please proceed to the counter to pay for your order.</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Customer Info -->
+                    {% if order.customer_name or order.table_number %}
+                    <div class="border-t border-gray-200 pt-4 mb-4">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-2">Customer Information</h3>
+                        <div class="space-y-1 text-sm text-gray-600">
+                            {% if order.customer_name %}
+                            <p><i class="fas fa-user w-4 mr-2"></i>{{ order.customer_name }}</p>
+                            {% endif %}
+                            {% if order.customer_phone %}
+                            <p><i class="fas fa-phone w-4 mr-2"></i>{{ order.customer_phone }}</p>
+                            {% endif %}
+                            {% if order.table_number %}
+                            <p><i class="fas fa-chair w-4 mr-2"></i>Table {{ order.table_number }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Order Items -->
+                    <div class="border-t border-gray-200 pt-4">
+                        <h3 class="text-sm font-semibold text-gray-900 mb-3">Order Items</h3>
+                        <div class="space-y-3">
+                            {% for item in order.items.all %}
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center flex-1">
+                                    <div class="h-12 w-12 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
+                                        <i class="fas fa-pizza-slice text-white"></i>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium text-gray-900">{{ item.sku.name }}</p>
+                                        <p class="text-xs text-gray-500">₱{{ item.unit_price }} × {{ item.quantity }}</p>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-semibold text-gray-900">₱{{ item.get_total }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Order Total -->
+                    <div class="border-t border-gray-200 mt-4 pt-4 space-y-2">
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>Subtotal</span>
+                            <span>₱{{ order.subtotal }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm text-gray-600">
+                            <span>Tax (12%)</span>
+                            <span>₱{{ order.tax }}</span>
+                        </div>
+                        <div class="flex justify-between text-xl font-bold text-gray-900 pt-2 border-t">
+                            <span>Total</span>
+                            <span class="text-indigo-600">₱{{ order.total_amount }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="mt-4 bg-gray-50 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">Payment Method:</span>
+                            <span class="text-sm font-semibold text-gray-900">
+                                <i class="fas {% if order.payment_method == 'counter' %}fa-cash-register{% elif order.payment_method == 'gcash' %}fa-mobile-alt{% else %}fa-credit-card{% endif %} mr-2"></i>
+                                {{ order.get_payment_method_display }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a href="{% url 'orders_public:order_status' order.order_number %}" 
+                   class="flex-1 bg-indigo-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">
+                    <i class="fas fa-sync-alt mr-2"></i>
+                    Track Order Status
+                </a>
+                <a href="{% url 'orders_public:menu' branch.code %}" 
+                   class="flex-1 bg-white border-2 border-gray-300 text-gray-700 text-center py-3 rounded-lg font-semibold hover:bg-gray-50 transition">
+                    <i class="fas fa-pizza-slice mr-2"></i>
+                    Order Again
+                </a>
+            </div>
+
+            <!-- Branch Info -->
+            <div class="text-center mt-8 text-sm text-gray-500">
+                <p class="font-semibold text-gray-700">{{ branch.name }}</p>
+                <p>{{ branch.address }}</p>
+                <p>{{ branch.phone }}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
