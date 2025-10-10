@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order - {{ branch.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .pizza-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .pizza-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <div class="gradient-bg text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold flex items-center">
+                        <i class="fas fa-pizza-slice mr-2"></i>
+                        {{ branch.name }}
+                    </h1>
+                    <p class="text-sm opacity-90">{{ branch.address }}</p>
+                </div>
+                <a href="{% url 'orders_public:cart' branch.code %}" class="relative bg-white bg-opacity-20 hover:bg-opacity-30 px-4 py-2 rounded-lg transition">
+                    <i class="fas fa-shopping-cart text-xl"></i>
+                    <span id="cartCount" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                        {{ cart.count }}
+                    </span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Categories -->
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        {% for category in categories %}
+        <div class="mb-12">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6 flex items-center">
+                <span class="h-1 w-12 gradient-bg mr-4 rounded"></span>
+                {{ category.name }}
+            </h2>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {% for sku in category.skus.all %}
+                {% if sku.is_active %}
+                <div class="pizza-card bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="h-48 bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
+                        {% if sku.image %}
+                        <img src="{{ sku.image.url }}" alt="{{ sku.name }}" class="w-full h-full object-cover">
+                        {% else %}
+                        <i class="fas fa-pizza-slice text-white text-6xl"></i>
+                        {% endif %}
+                    </div>
+                    <div class="p-5">
+                        <h3 class="font-bold text-lg text-gray-900 mb-2">{{ sku.name }}</h3>
+                        <p class="text-sm text-gray-600 mb-4 line-clamp-2">{{ sku.description|default:"Delicious pizza made fresh!" }}</p>
+                        <div class="flex justify-between items-center">
+                            <span class="text-2xl font-bold text-indigo-600">₱{{ sku.price }}</span>
+                            <button onclick="addToCart({{ sku.id }}, '{{ sku.name }}')" 
+                                    class="gradient-bg text-white px-4 py-2 rounded-lg hover:opacity-90 transition">
+                                <i class="fas fa-plus mr-1"></i> Add
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center py-12">
+            <i class="fas fa-pizza-slice text-gray-400 text-6xl mb-4"></i>
+            <p class="text-gray-500 text-lg">No menu items available at the moment.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Floating Cart Button (Mobile) -->
+    <a href="{% url 'orders_public:cart' branch.code %}" 
+       class="fixed bottom-6 right-6 gradient-bg text-white px-6 py-4 rounded-full shadow-2xl hover:opacity-90 transition lg:hidden">
+        <i class="fas fa-shopping-cart mr-2"></i>
+        Cart (<span id="cartCountMobile">{{ cart.count }}</span>)
+    </a>
+
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function addToCart(skuId, skuName) {
+            const csrftoken = getCookie('csrftoken');
+            
+            fetch('{% url "orders_public:add_to_cart" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': csrftoken
+                },
+                body: `sku_id=${skuId}&quantity=1`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update cart count
+                    document.getElementById('cartCount').textContent = data.cart_count;
+                    document.getElementById('cartCountMobile').textContent = data.cart_count;
+                    
+                    // Show success message
+                    showNotification(`${skuName} added to cart!`, 'success');
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to add item to cart', 'error');
+            });
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-20 right-6 px-6 py-4 rounded-lg shadow-lg text-white transform transition-all duration-300 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+            notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} mr-2"></i>${message}`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

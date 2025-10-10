@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Pizza Stock Management{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-chart-line mr-2"></i>
+            Business Intelligence Dashboard
+        </h1>
+        <p class="mt-2 text-sm text-gray-600">
+            Overview of your store performance
+        </p>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="mb-6">
+        <div class="inline-flex rounded-md shadow-sm" role="group">
+            <a href="?days=7"
+                class="px-4 py-2 text-sm font-medium {% if days == 7 %}bg-indigo-600 text-white{% else %}bg-white text-gray-700 hover:bg-gray-50{% endif %} border border-gray-200 rounded-l-lg">
+                7 Days
+            </a>
+            <a href="?days=30"
+                class="px-4 py-2 text-sm font-medium {% if days == 30 %}bg-indigo-600 text-white{% else %}bg-white text-gray-700 hover:bg-gray-50{% endif %} border-t border-b border-gray-200">
+                30 Days
+            </a>
+            <a href="?days=90"
+                class="px-4 py-2 text-sm font-medium {% if days == 90 %}bg-indigo-600 text-white{% else %}bg-white text-gray-700 hover:bg-gray-50{% endif %} border border-gray-200 rounded-r-lg">
+                90 Days
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <!-- Total Revenue -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg card-hover">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-green-500 rounded-md p-3">
+                            <i class="fas fa-dollar-sign text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+                            <dd class="text-2xl font-bold text-gray-900">₱{{
+                                sales_summary.total_revenue|floatformat:2|default:"0.00" }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Orders -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg card-hover">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-blue-500 rounded-md p-3">
+                            <i class="fas fa-shopping-cart text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Orders</dt>
+                            <dd class="text-2xl font-bold text-gray-900">{{ orders_summary.total_orders|default:"0" }}
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items Sold -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg card-hover">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-purple-500 rounded-md p-3">
+                            <i class="fas fa-pizza-slice text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Items Sold</dt>
+                            <dd class="text-2xl font-bold text-gray-900">{{ sales_summary.total_items_sold|default:"0"
+                                }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock Alert -->
+        <div class="bg-white overflow-hidden shadow-lg rounded-lg card-hover">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div
+                            class="{% if low_stock_count > 0 %}bg-red-500{% else %}bg-gray-400{% endif %} rounded-md p-3">
+                            <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Low Stock Items</dt>
+                            <dd class="text-2xl font-bold text-gray-900">{{ low_stock_count }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Sales Trend Chart -->
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-chart-area mr-2"></i>
+                Sales Trend (Last {{ days }} Days)
+            </h3>
+            <canvas id="salesChart" height="250"></canvas>
+        </div>
+
+        <!-- Top Selling Items -->
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">
+                <i class="fas fa-fire mr-2"></i>
+                Top Selling Items
+            </h3>
+            <div class="space-y-4">
+                {% for item in top_items %}
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">{{ item.sku__name }}</p>
+                        <p class="text-xs text-gray-500">{{ item.sku__category__name }}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-indigo-600">{{ item.total_sold }} sold</p>
+                        <p class="text-xs text-gray-500">₱{{ item.total_revenue|floatformat:2 }}</p>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-gray-500 text-center py-4">No sales data available</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alerts -->
+    {% if low_stock_items %}
+    <div class="bg-white shadow-lg rounded-lg p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">
+            <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+            Low Stock Alerts
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Current Stock</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Safety Stock</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Action</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for item in low_stock_items %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ item.sku.name }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.quantity }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.safety_stock }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span
+                                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {% if item.quantity == 0 %}bg-red-100 text-red-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {{ item.stock_status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="{% url 'inventory:restock' item.sku.id %}"
+                                class="text-indigo-600 hover:text-indigo-900">
+                                <i class="fas fa-box mr-1"></i> Restock
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Sales Trend Chart
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels| safe }},
+        datasets: [{
+            label: 'Revenue (₱)',
+            data: {{ chart_revenue| safe }},
+        borderColor: 'rgb(99, 102, 241)',
+        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+        tension: 0.4,
+        fill: true
+        }]
+    },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function (value) {
+                        return '₱' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}
