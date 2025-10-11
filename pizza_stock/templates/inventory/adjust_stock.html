@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Adjust Stock - Pizza Stock Management{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-edit mr-2"></i>
+            Adjust Stock
+        </h1>
+        <p class="mt-2 text-sm text-gray-600">Manual stock adjustment for {{ sku.name }}</p>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Item</label>
+                <div class="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <div class="h-16 w-16 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center">
+                        <i class="fas fa-pizza-slice text-white text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">{{ sku.name }}</h3>
+                        <p class="text-sm text-gray-600">Current Stock: <strong>{{ inventory.quantity|default:"0" }}</strong> units</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <label for="new_quantity" class="block text-sm font-medium text-gray-700 mb-2">
+                    New Quantity <span class="text-red-500">*</span>
+                </label>
+                <input type="number" name="new_quantity" id="new_quantity" min="0" required
+                       value="{{ inventory.quantity|default:'0' }}"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                       placeholder="Enter new quantity">
+            </div>
+
+            <div class="mb-6">
+                <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+                    Reason for Adjustment <span class="text-red-500">*</span>
+                </label>
+                <textarea name="notes" id="notes" rows="3" required
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="Please explain the reason for this adjustment..."></textarea>
+            </div>
+
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <div class="flex">
+                    <i class="fas fa-exclamation-triangle text-yellow-600 mr-3 mt-1"></i>
+                    <div class="text-sm text-yellow-800">
+                        <p class="font-semibold mb-1">Warning</p>
+                        <p>Manual stock adjustments should only be done for corrections. All changes are logged and auditable.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex space-x-4">
+                <button type="submit" class="flex-1 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold">
+                    <i class="fas fa-check mr-2"></i>
+                    Confirm Adjustment
+                </button>
+                <a href="{% url 'inventory:dashboard' %}" class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-semibold text-center">
+                    <i class="fas fa-times mr-2"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

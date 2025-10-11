@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Branch QR Code - Pizza Stock Management{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-qrcode mr-2"></i>
+            QR Code for {{ branch.name }}
+        </h1>
+        <p class="mt-2 text-sm text-gray-600">Customers can scan this QR code to order</p>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-lg p-8 text-center">
+        {% if branch.qr_code %}
+        <div class="mb-6">
+            <img src="{{ branch.qr_code.url }}" alt="QR Code for {{ branch.name }}" class="mx-auto max-w-sm">
+        </div>
+        {% else %}
+        <div class="mb-6 p-12 bg-gray-100 rounded-lg">
+            <i class="fas fa-qrcode text-gray-400 text-8xl mb-4"></i>
+            <p class="text-gray-600">QR Code will be generated automatically</p>
+        </div>
+        {% endif %}
+
+        <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6">
+            <p class="text-sm text-indigo-800 font-semibold mb-2">Ordering URL</p>
+            <p class="text-sm text-indigo-600 font-mono">{{ request.scheme }}://{{ request.get_host }}{{ branch.get_ordering_url }}</p>
+        </div>
+
+        <div class="space-y-3">
+            <a href="{{ branch.get_ordering_url }}" target="_blank"
+               class="block w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold">
+                <i class="fas fa-external-link-alt mr-2"></i>
+                Test Ordering Page
+            </a>
+            {% if branch.qr_code %}
+            <a href="{{ branch.qr_code.url }}" download="qr_{{ branch.code }}.png"
+               class="block w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-semibold">
+                <i class="fas fa-download mr-2"></i>
+                Download QR Code
+            </a>
+            {% endif %}
+            <a href="{% url 'inventory:dashboard' %}"
+               class="block w-full bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-semibold">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Inventory
+            </a>
+        </div>
+    </div>
+
+    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex">
+            <i class="fas fa-info-circle text-blue-600 mr-3 mt-1"></i>
+            <div class="text-sm text-blue-800">
+                <p class="font-semibold mb-1">How to use:</p>
+                <ul class="list-disc ml-5 space-y-1">
+                    <li>Print this QR code and place it on tables</li>
+                    <li>Customers scan the code with their phone camera</li>
+                    <li>They can browse the menu and place orders directly</li>
+                    <li>Orders appear in the Orders dashboard</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

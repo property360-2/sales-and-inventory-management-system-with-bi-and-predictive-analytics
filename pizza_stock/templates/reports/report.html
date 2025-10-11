@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+
+{% block title %}Sales Report - Pizza Stock Management{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-chart-bar mr-2"></i>
+            Detailed Sales Report
+        </h1>
+        <p class="mt-2 text-sm text-gray-600">
+            Complete sales transactions for {{ request.current_branch.name }}
+        </p>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white shadow-lg rounded-lg p-6 mb-6">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                <input type="date" name="start_date" value="{{ start_date }}" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                <input type="date" name="end_date" value="{{ end_date }}" 
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="w-full px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                    <i class="fas fa-search mr-2"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <p class="text-sm text-gray-600 mb-1">Total Revenue</p>
+            <p class="text-3xl font-bold text-green-600">₱{{ summary.total_revenue|floatformat:2|default:"0.00" }}</p>
+        </div>
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <p class="text-sm text-gray-600 mb-1">Total Quantity</p>
+            <p class="text-3xl font-bold text-blue-600">{{ summary.total_quantity|default:"0" }}</p>
+        </div>
+        <div class="bg-white shadow-lg rounded-lg p-6">
+            <p class="text-sm text-gray-600 mb-1">Total Transactions</p>
+            <p class="text-3xl font-bold text-purple-600">{{ summary.total_transactions|default:"0" }}</p>
+        </div>
+    </div>
+
+    <!-- Sales Table -->
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Price</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for sale in page_obj %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ sale.created_at|date:"M d, Y H:i" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ sale.sku.name }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900">
+                            {{ sale.quantity }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+                            ₱{{ sale.unit_price }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-green-600">
+                            ₱{{ sale.total_amount }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {% if sale.order %}
+                            <a href="{% url 'orders:detail' sale.order.id %}" class="text-indigo-600 hover:text-indigo-900">
+                                #{{ sale.order.order_number }}
+                            </a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-2"></i>
+                            <p>No sales records found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="bg-gray-50 px-6 py-4 border-t flex justify-between items-center">
+            <div class="text-sm text-gray-700">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} results
+            </div>
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
+                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-l-md">
+                    Previous
+                </a>
+                {% endif %}
+                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}" 
+                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-r-md">
+                    Next
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

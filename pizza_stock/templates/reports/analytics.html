@@ -1,0 +1,213 @@
+{% extends 'base.html' %} {% block title %}Sales Analytics - Pizza Stock
+Management{% endblock %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      <i class="fas fa-chart-pie mr-2"></i>
+      Advanced Sales Analytics
+    </h1>
+    <p class="mt-2 text-sm text-gray-600">
+      Detailed insights for {{ request.current_branch.name }}
+    </p>
+  </div>
+
+  <!-- Date Filter -->
+  <div class="mb-6">
+    <div class="inline-flex rounded-md shadow-sm" role="group">
+      <a
+        href="?days=7"
+        class="px-4 py-2 text-sm font-medium {% if days == 7 %}bg-indigo-600 text-white{% else %}bg-white text-gray-700 hover:bg-gray-50{% endif %} border border-gray-200 rounded-l-lg"
+      >
+        7 Days
+      </a>
+      <a
+        href="?days=30"
+        class="px-4 py-2 text-sm font-medium {% if days == 30 %}bg-indigo-600 text-white{% else %}bg-white text-gray-700 hover:bg-gray-50{% endif %} border-t border-b border-gray-200"
+      >
+        30 Days
+      </a>
+      <a
+        href="?days=90"
+        class="px-4 py-2 text-sm font-medium {% if days == 90 %}bg-indigo-600 text-white{% else %}bg-white text-gray-700 hover:bg-gray-50{% endif %} border border-gray-200 rounded-r-lg"
+      >
+        90 Days
+      </a>
+    </div>
+  </div>
+
+  <!-- Category Performance -->
+  <div class="bg-white shadow-lg rounded-lg p-6 mb-8">
+    <h2 class="text-xl font-semibold text-gray-900 mb-6">
+      <i class="fas fa-layer-group mr-2"></i>
+      Sales by Category
+    </h2>
+    <canvas id="categoryChart" height="80"></canvas>
+  </div>
+
+  <!-- Category Table -->
+  <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+            >
+              Category
+            </th>
+            <th
+              class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
+            >
+              Revenue
+            </th>
+            <th
+              class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"
+            >
+              Items Sold
+            </th>
+            <th
+              class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"
+            >
+              Transactions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for cat in category_sales %}
+          <tr class="hover:bg-gray-50">
+            <td
+              class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+            >
+              {{ cat.sku__category__name }}
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-green-600"
+            >
+              ₱{{ cat.total_revenue|floatformat:2 }}
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900"
+            >
+              {{ cat.total_quantity }}
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500"
+            >
+              {{ cat.transaction_count }}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="px-6 py-8 text-center text-gray-500">
+              No category data available
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Payment Methods -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">
+        <i class="fas fa-credit-card mr-2"></i>
+        Payment Methods
+      </h2>
+      <div class="space-y-4">
+        {% for payment in payment_breakdown %}
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <i
+              class="fas {% if payment.payment_method == 'counter' %}fa-cash-register{% elif payment.payment_method == 'gcash' %}fa-mobile-alt{% else %}fa-credit-card{% endif %} text-2xl text-indigo-600 mr-3"
+            ></i>
+            <div>
+              <p class="font-semibold text-gray-900">
+                {% if payment.payment_method == 'counter' %}Pay at Counter {%
+                elif payment.payment_method == 'gcash' %}GCash {% elif
+                payment.payment_method == 'paymaya' %}PayMaya {% else %}{{
+                payment.payment_method }}{% endif %}
+              </p>
+              <p class="text-sm text-gray-500">{{ payment.count }} orders</p>
+            </div>
+          </div>
+          <p class="text-lg font-bold text-indigo-600">
+            ₱{{ payment.total|floatformat:2 }}
+          </p>
+        </div>
+        {% empty %}
+        <p class="text-gray-500 text-center py-4">No payment data</p>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Top Customers -->
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4">
+        <i class="fas fa-users mr-2"></i>
+        Top Customers
+      </h2>
+      <div class="space-y-4">
+        {% for customer in top_customers %}
+        <div class="flex items-center justify-between border-b pb-3">
+          <div>
+            <p class="font-semibold text-gray-900">
+              {{ customer.customer_name|default:"Anonymous" }}
+            </p>
+            <p class="text-sm text-gray-500">{{ customer.customer_phone }}</p>
+          </div>
+          <div class="text-right">
+            <p class="font-bold text-indigo-600">
+              ₱{{ customer.total_spent|floatformat:2 }}
+            </p>
+            <p class="text-xs text-gray-500">
+              {{ customer.order_count }} orders
+            </p>
+          </div>
+        </div>
+        {% empty %}
+        <p class="text-gray-500 text-center py-4">No customer data</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Category Chart
+  const catCtx = document.getElementById('categoryChart');
+  new Chart(catCtx, {
+      type: 'bar',
+      data: {
+          labels: {{ category_sales|map:'sku__category__name'|list|safe }},
+          datasets: [{
+              label: 'Revenue (₱)',
+              data: {{ category_sales|map:'total_revenue'|list|safe }},
+              backgroundColor: 'rgba(99, 102, 241, 0.8)',
+              borderColor: 'rgb(99, 102, 241)',
+              borderWidth: 1
+          }]
+      },
+      options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+              legend: {
+                  display: false
+              }
+          },
+          scales: {
+              y: {
+                  beginAtZero: true,
+                  ticks: {
+                      callback: function(value) {
+                          return '₱' + value.toLocaleString();
+                      }
+                  }
+              }
+          }
+      }
+  });
+</script>
+{% endblock %}

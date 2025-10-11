@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Order Status - {{ branch.name }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .pulse-animation {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+    </style>
+    <meta http-equiv="refresh" content="30" />
+  </head>
+  <body class="bg-gray-50">
+    <div class="min-h-screen py-12 px-4">
+      <div class="max-w-2xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">Order Status</h1>
+          <p class="text-gray-600">Order #{{ order.order_number }}</p>
+          <p class="text-sm text-gray-500 mt-2">
+            <i class="fas fa-sync-alt mr-1"></i>
+            Page auto-refreshes every 30 seconds
+          </p>
+        </div>
+
+        <!-- Status Progress -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div class="space-y-4">
+            <!-- Pending/Paid -->
+            <div
+              class="flex items-center {% if order.status in 'pending,paid,preparing,ready,completed' %}text-green-600{% else %}text-gray-400{% endif %}"
+            >
+              <div class="flex-shrink-0">
+                <div
+                  class="h-10 w-10 rounded-full flex items-center justify-center {% if order.status in 'pending,paid,preparing,ready,completed' %}bg-green-500{% else %}bg-gray-300{% endif %}"
+                >
+                  <i class="fas fa-check text-white"></i>
+                </div>
+              </div>
+              <div class="ml-4 flex-1">
+                <p class="font-semibold">Order Received</p>
+                <p class="text-sm">{{ order.created_at|date:"M d, Y H:i" }}</p>
+              </div>
+            </div>
+
+            <!-- Preparing -->
+            <div
+              class="flex items-center {% if order.status in 'preparing,ready,completed' %}text-blue-600{% elif order.status == 'paid' %}text-gray-600 pulse-animation{% else %}text-gray-400{% endif %}"
+            >
+              <div class="flex-shrink-0">
+                <div
+                  class="h-10 w-10 rounded-full flex items-center justify-center {% if order.status in 'preparing,ready,completed' %}bg-blue-500{% elif order.status == 'paid' %}bg-gray-300{% else %}bg-gray-300{% endif %}"
+                >
+                  <i class="fas fa-fire text-white"></i>
+                </div>
+              </div>
+              <div class="ml-4 flex-1">
+                <p class="font-semibold">Preparing Your Order</p>
+                <p class="text-sm">
+                  {% if order.status in 'preparing,ready,completed' %} In
+                  progress {% else %} Waiting... {% endif %}
+                </p>
+              </div>
+            </div>
+
+            <!-- Ready -->
+            <div
+              class="flex items-center {% if order.status in 'ready,completed' %}text-purple-600{% elif order.status == 'preparing' %}text-gray-600 pulse-animation{% else %}text-gray-400{% endif %}"
+            >
+              <div class="flex-shrink-0">
+                <div
+                  class="h-10 w-10 rounded-full flex items-center justify-center {% if order.status in 'ready,completed' %}bg-purple-500{% else %}bg-gray-300{% endif %}"
+                >
+                  <i class="fas fa-bell text-white"></i>
+                </div>
+              </div>
+              <div class="ml-4 flex-1">
+                <p class="font-semibold">Ready for Pickup</p>
+                <p class="text-sm">
+                  {% if order.status in 'ready,completed' %} Your order is
+                  ready! {% else %} Not yet {% endif %}
+                </p>
+              </div>
+            </div>
+
+            <!-- Completed -->
+            <div
+              class="flex items-center {% if order.status == 'completed' %}text-gray-600{% else %}text-gray-400{% endif %}"
+            >
+              <div class="flex-shrink-0">
+                <div
+                  class="h-10 w-10 rounded-full flex items-center justify-center {% if order.status == 'completed' %}bg-gray-500{% else %}bg-gray-300{% endif %}"
+                >
+                  <i class="fas fa-check-circle text-white"></i>
+                </div>
+              </div>
+              <div class="ml-4 flex-1">
+                <p class="font-semibold">Completed</p>
+                <p class="text-sm">
+                  {% if order.status == 'completed' %} {{
+                  order.completed_at|date:"M d, Y H:i" }} {% else %} Pending {%
+                  endif %}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {% if order.status == 'cancelled' %}
+          <div class="mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex items-center">
+              <i class="fas fa-times-circle text-red-600 text-2xl mr-3"></i>
+              <div>
+                <p class="font-semibold text-red-900">Order Cancelled</p>
+                <p class="text-sm text-red-700">
+                  This order has been cancelled.
+                </p>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Current Status Card -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div class="text-center">
+            <p class="text-sm text-gray-600 mb-2">Current Status</p>
+            <div
+              class="inline-block px-6 py-3 rounded-full text-lg font-semibold {% if order.status == 'pending' %}bg-yellow-100 text-yellow-800 {% elif order.status == 'paid' %}bg-green-100 text-green-800 {% elif order.status == 'preparing' %}bg-blue-100 text-blue-800 {% elif order.status == 'ready' %}bg-purple-100 text-purple-800 {% elif order.status == 'completed' %}bg-gray-100 text-gray-800 {% elif order.status == 'cancelled' %}bg-red-100 text-red-800 {% endif %}"
+            >
+              {{ order.get_status_display }}
+            </div>
+          </div>
+
+          {% if order.status == 'ready' %}
+          <div
+            class="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-4 animate-pulse"
+          >
+            <div class="text-center">
+              <i class="fas fa-bell text-purple-600 text-3xl mb-2"></i>
+              <p class="font-semibold text-purple-900 text-lg">
+                Your Order is Ready!
+              </p>
+              <p class="text-sm text-purple-700 mt-1">
+                Please proceed to the counter to pick up your order.
+              </p>
+            </div>
+          </div>
+          {% endif %} {% if order.status == 'pending' and order.payment_method
+          == 'counter' %}
+          <div
+            class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4"
+          >
+            <div class="text-center">
+              <i class="fas fa-info-circle text-yellow-600 text-2xl mb-2"></i>
+              <p class="font-semibold text-yellow-900">Payment Required</p>
+              <p class="text-sm text-yellow-700 mt-1">
+                Please proceed to the counter to pay for your order.
+              </p>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Order Summary -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <h3 class="font-semibold text-gray-900 mb-4">Order Summary</h3>
+          <div class="space-y-3">
+            {% for item in order.items.all %}
+            <div class="flex justify-between text-sm">
+              <span class="text-gray-600"
+                >{{ item.sku.name }} ×{{ item.quantity }}</span
+              >
+              <span class="font-semibold text-gray-900"
+                >₱{{ item.get_total }}</span
+              >
+            </div>
+            {% endfor %}
+          </div>
+          <div class="border-t mt-4 pt-4">
+            <div class="flex justify-between text-lg font-bold">
+              <span>Total</span>
+              <span class="text-indigo-600">₱{{ order.total_amount }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="text-center space-y-3">
+          <button
+            onclick="location.reload()"
+            class="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold"
+          >
+            <i class="fas fa-sync-alt mr-2"></i>
+            Refresh Status
+          </button>
+          <a
+            href="{% url 'orders_public:menu' branch.code %}"
+            class="block w-full bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-semibold"
+          >
+            <i class="fas fa-pizza-slice mr-2"></i>
+            Order Again
+          </a>
+        </div>
+
+        <!-- Branch Info -->
+        <div class="text-center mt-8 text-sm text-gray-500">
+          <p class="font-semibold text-gray-700">{{ branch.name }}</p>
+          <p>{{ branch.phone }}</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

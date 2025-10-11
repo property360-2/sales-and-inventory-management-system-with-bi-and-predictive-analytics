@@ -1,0 +1,149 @@
+{% extends 'base.html' %} {% block title %}Inventory Report - Pizza Stock
+Management{% endblock %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      <i class="fas fa-warehouse mr-2"></i>
+      Inventory Report
+    </h1>
+    <p class="mt-2 text-sm text-gray-600">
+      Complete inventory overview for {{ request.current_branch.name }}
+    </p>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <p class="text-sm text-gray-600 mb-1">Total Items</p>
+      <p class="text-3xl font-bold text-indigo-600">{{ total_items }}</p>
+    </div>
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <p class="text-sm text-gray-600 mb-1">Stock Value</p>
+      <p class="text-3xl font-bold text-green-600">
+        ₱{{ total_stock_value|floatformat:2 }}
+      </p>
+    </div>
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <p class="text-sm text-gray-600 mb-1">Low Stock Items</p>
+      <p class="text-3xl font-bold text-yellow-600">
+        {{ low_stock_items.count }}
+      </p>
+    </div>
+    <div class="bg-white shadow-lg rounded-lg p-6">
+      <p class="text-sm text-gray-600 mb-1">Out of Stock</p>
+      <p class="text-3xl font-bold text-red-600">
+        {{ out_of_stock_items.count }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Full Inventory Table -->
+  <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">
+        Complete Inventory List
+      </h2>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+            >
+              Item
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+            >
+              Category
+            </th>
+            <th
+              class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"
+            >
+              Stock
+            </th>
+            <th
+              class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
+            >
+              Unit Price
+            </th>
+            <th
+              class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase"
+            >
+              Stock Value
+            </th>
+            <th
+              class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"
+            >
+              Status
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for item in inventory %}
+          <tr class="hover:bg-gray-50">
+            <td
+              class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+            >
+              {{ item.sku.name }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+              <span
+                class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800"
+              >
+                {{ item.sku.category.name }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+              <span
+                class="text-lg font-bold {% if item.quantity == 0 %}text-red-600{% elif item.is_low_stock %}text-yellow-600{% else %}text-green-600{% endif %}"
+              >
+                {{ item.quantity }}
+              </span>
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900"
+            >
+              ₱{{ item.sku.price }}
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-green-600"
+            >
+              ₱{{ item.stock_value|floatformat:2 }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+              {% if item.quantity == 0 %}
+              <span
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800"
+              >
+                Out of Stock
+              </span>
+              {% elif item.is_low_stock %}
+              <span
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800"
+              >
+                Low Stock
+              </span>
+              {% else %}
+              <span
+                class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
+              >
+                In Stock
+              </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+              No inventory records found
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

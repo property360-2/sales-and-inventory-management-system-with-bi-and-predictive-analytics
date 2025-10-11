@@ -1,0 +1,199 @@
+{% extends 'base.html' %} {% block title %}Demand Forecast - Pizza Stock
+Management{% endblock %} {% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      <i class="fas fa-brain mr-2"></i>
+      Demand Forecasting
+    </h1>
+    <p class="mt-2 text-sm text-gray-600">
+      AI-powered predictions for {{ request.current_branch.name }}
+    </p>
+  </div>
+
+  <!-- Forecast Accuracy -->
+  <div
+    class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-lg p-6 mb-8 text-white"
+  >
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-bold mb-2">Forecast Accuracy</h2>
+        <p class="text-indigo-100">Based on last 30 days of predictions</p>
+      </div>
+      <div class="text-right">
+        <div class="text-5xl font-bold">{{ avg_accuracy }}%</div>
+        <p class="text-indigo-100 mt-2">Average Accuracy</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tomorrow's Forecast -->
+  <div class="mb-8">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">
+      <i class="fas fa-calendar-day mr-2"></i>
+      Forecast for {{ forecast_date|date:"F d, Y" }}
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for forecast in forecasts %}
+      <div
+        class="bg-white shadow-lg rounded-lg overflow-hidden hover:shadow-xl transition"
+      >
+        <div class="p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center">
+              <div
+                class="h-12 w-12 rounded-lg bg-gradient-to-br from-orange-400 to-red-500 flex items-center justify-center"
+              >
+                <i class="fas fa-pizza-slice text-white"></i>
+              </div>
+              <div class="ml-3">
+                <h3 class="font-semibold text-gray-900">
+                  {{ forecast.sku.name }}
+                </h3>
+                <p class="text-xs text-gray-500">
+                  {{ forecast.sku.category.name }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-sm text-gray-600">Predicted Demand:</span>
+              <span class="text-2xl font-bold text-indigo-600"
+                >{{ forecast.predicted_quantity }}</span
+              >
+            </div>
+
+            <div class="w-full bg-gray-200 rounded-full h-2">
+              <div
+                class="bg-indigo-600 h-2 rounded-full"
+                style="width: {{ forecast.confidence_level }}%"
+              ></div>
+            </div>
+            <p class="text-xs text-gray-500 text-right">
+              Confidence: {{ forecast.confidence_level|floatformat:0 }}%
+            </p>
+
+            <div class="pt-3 border-t border-gray-200">
+              <p class="text-xs text-gray-500">
+                Method: {{ forecast.method|title }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div
+        class="col-span-full text-center py-12 bg-white rounded-lg shadow-lg"
+      >
+        <i class="fas fa-chart-line text-gray-300 text-6xl mb-4"></i>
+        <p class="text-gray-500 text-lg mb-2">No forecasts available</p>
+        <p class="text-sm text-gray-400">
+          Run the forecast task to generate predictions
+        </p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Recent Forecast Performance -->
+  <div class="bg-white shadow-lg rounded-lg p-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">
+      <i class="fas fa-chart-bar mr-2"></i>
+      Recent Forecast Performance
+    </h2>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+            >
+              Date
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+            >
+              Item
+            </th>
+            <th
+              class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"
+            >
+              Predicted
+            </th>
+            <th
+              class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"
+            >
+              Actual
+            </th>
+            <th
+              class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase"
+            >
+              Accuracy
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          {% for forecast in recent_forecasts %}
+          <tr class="hover:bg-gray-50">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {{ forecast.forecast_date|date:"M d, Y" }}
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+            >
+              {{ forecast.sku.name }}
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-center text-sm text-indigo-600 font-semibold"
+            >
+              {{ forecast.predicted_quantity }}
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-900 font-semibold"
+            >
+              {{ forecast.actual_quantity|default:"-" }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">
+              {% if forecast.accuracy != None %}
+              <span
+                class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {% if forecast.accuracy >= 80 %}bg-green-100 text-green-800 {% elif forecast.accuracy >= 60 %}bg-yellow-100 text-yellow-800 {% else %}bg-red-100 text-red-800{% endif %}"
+              >
+                {{ forecast.accuracy }}%
+              </span>
+              {% else %}
+              <span class="text-gray-400 text-sm">Pending</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+              No historical forecast data available
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="flex">
+      <i class="fas fa-info-circle text-blue-600 mr-3 mt-1"></i>
+      <div class="text-sm text-blue-800">
+        <p class="font-semibold mb-1">How forecasting works:</p>
+        <ul class="list-disc ml-5 space-y-1">
+          <li>System analyzes last 7-14 days of sales data</li>
+          <li>Uses moving average algorithm to predict tomorrow's demand</li>
+          <li>Forecasts are automatically updated daily</li>
+          <li>Use predictions to optimize inventory and reduce waste</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
