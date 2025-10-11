@@ -1,41 +1,18 @@
 from django.contrib import admin
-from .models import Branch, Category, SKU, InventoryRecord, StockTransaction
+from .models import Sale, DailySales
 
-@admin.register(Branch)
-class BranchAdmin(admin.ModelAdmin):
-    list_display = ['name', 'code', 'phone', 'is_active', 'created_at']
-    list_filter = ['is_active']
-    search_fields = ['name', 'code', 'address']
-    readonly_fields = ['created_at']
-
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'display_order', 'is_active']
-    list_filter = ['is_active']
-    search_fields = ['name']
-
-@admin.register(SKU)
-class SKUAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'price', 'is_active', 'created_at']
-    list_filter = ['category', 'is_active']
-    search_fields = ['name', 'description']
-    readonly_fields = ['created_at', 'updated_at']
-
-@admin.register(InventoryRecord)
-class InventoryRecordAdmin(admin.ModelAdmin):
-    list_display = ['branch', 'sku', 'quantity', 'safety_stock', 'stock_status', 'updated_at']
-    list_filter = ['branch']
-    search_fields = ['sku__name', 'branch__name']
-    readonly_fields = ['updated_at']
-    
-    def stock_status(self, obj):
-        return obj.stock_status()
-    stock_status.short_description = 'Status'
-
-@admin.register(StockTransaction)
-class StockTransactionAdmin(admin.ModelAdmin):
-    list_display = ['branch', 'sku', 'quantity', 'transaction_type', 'user', 'created_at']
-    list_filter = ['transaction_type', 'branch', 'created_at']
-    search_fields = ['sku__name', 'branch__name', 'notes']
-    readonly_fields = ['created_at']
+@admin.register(Sale)
+class SaleAdmin(admin.ModelAdmin):
+    list_display = ['id', 'branch', 'sku', 'quantity', 'unit_price', 'total_amount', 'order', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['sku__name']
+    readonly_fields = ['created_at', 'total_amount']
     date_hierarchy = 'created_at'
+
+@admin.register(DailySales)
+class DailySalesAdmin(admin.ModelAdmin):
+    list_display = ['date', 'branch', 'sku', 'total_quantity', 'total_amount', 'transaction_count']
+    list_filter = ['date']
+    search_fields = ['sku__name']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'date'

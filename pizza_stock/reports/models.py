@@ -1,3 +1,3 @@
 from django.db import models
 
-# Create your models here.
+# This app doesn't have any models - it only has views for reporting
