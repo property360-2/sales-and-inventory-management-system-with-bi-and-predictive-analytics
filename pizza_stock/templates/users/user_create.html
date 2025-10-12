@@ -1,0 +1,287 @@
+{% extends 'base.html' %} {% block title %}Create User - Pizza Stock
+Management{% endblock %} {% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      <i class="fas fa-user-plus mr-2"></i>
+      Create New User
+    </h1>
+    <p class="mt-2 text-sm text-gray-600">Add a new user to the system</p>
+  </div>
+
+  <div class="bg-white shadow-lg rounded-lg p-8">
+    <form method="POST">
+      {% csrf_token %}
+
+      <!-- Account Information -->
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+          <i class="fas fa-user-circle mr-2 text-indigo-600"></i>
+          Account Information
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label
+              for="username"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Username <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="username"
+              id="username"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Enter username"
+            />
+          </div>
+
+          <div>
+            <label
+              for="email"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              id="email"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="user@example.com"
+            />
+          </div>
+
+          <div>
+            <label
+              for="first_name"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              First Name
+            </label>
+            <input
+              type="text"
+              name="first_name"
+              id="first_name"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="John"
+            />
+          </div>
+
+          <div>
+            <label
+              for="last_name"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Last Name
+            </label>
+            <input
+              type="text"
+              name="last_name"
+              id="last_name"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Doe"
+            />
+          </div>
+
+          <div>
+            <label
+              for="phone"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              id="phone"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="0912-345-6789"
+            />
+          </div>
+
+          <div>
+            <label
+              for="role"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Role <span class="text-red-500">*</span>
+            </label>
+            <select
+              name="role"
+              id="role"
+              required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            >
+              <option value="staff">Staff</option>
+              <option value="manager">Manager</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+          <i class="fas fa-lock mr-2 text-indigo-600"></i>
+          Password
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label
+              for="password"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Password <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              required
+              minlength="8"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Minimum 8 characters"
+            />
+          </div>
+
+          <div>
+            <label
+              for="password_confirm"
+              class="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Confirm Password <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              name="password_confirm"
+              id="password_confirm"
+              required
+              minlength="8"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+              placeholder="Re-enter password"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Branch Access -->
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+          <i class="fas fa-store mr-2 text-indigo-600"></i>
+          Branch Access
+        </h2>
+        <div class="bg-gray-50 rounded-lg p-4">
+          <p class="text-sm text-gray-600 mb-4">
+            Select which branches this user can access:
+          </p>
+          <div class="space-y-3">
+            {% for branch in branches %}
+            <label
+              class="flex items-center p-3 bg-white border border-gray-200 rounded-lg hover:border-indigo-500 cursor-pointer transition"
+            >
+              <input
+                type="checkbox"
+                name="branches"
+                value="{{ branch.id }}"
+                class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+              />
+              <div class="ml-3 flex-1">
+                <p class="font-semibold text-gray-900">{{ branch.name }}</p>
+                <p class="text-sm text-gray-500">
+                  {{ branch.code }} - {{ branch.address }}
+                </p>
+              </div>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Status -->
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+          <i class="fas fa-toggle-on mr-2 text-indigo-600"></i>
+          Status
+        </h2>
+        <label
+          class="flex items-center p-4 bg-gray-50 rounded-lg cursor-pointer"
+        >
+          <input
+            type="checkbox"
+            name="is_active"
+            checked
+            class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+          />
+          <div class="ml-3">
+            <p class="font-semibold text-gray-900">Active Account</p>
+            <p class="text-sm text-gray-600">
+              User can login and access the system
+            </p>
+          </div>
+        </label>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex space-x-4 pt-6 border-t">
+        <button
+          type="submit"
+          class="flex-1 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold text-lg transition"
+        >
+          <i class="fas fa-save mr-2"></i>
+          Create User
+        </button>
+        <a
+          href="{% url 'users:user_list' %}"
+          class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-semibold text-lg text-center transition"
+        >
+          <i class="fas fa-times mr-2"></i>
+          Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Info Box -->
+  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="flex">
+      <i class="fas fa-info-circle text-blue-600 mr-3 mt-1"></i>
+      <div class="text-sm text-blue-800">
+        <p class="font-semibold mb-1">User Roles:</p>
+        <ul class="list-disc ml-5 space-y-1">
+          <li><strong>Staff:</strong> Can view inventory and process orders</li>
+          <li>
+            <strong>Manager:</strong> Can manage inventory, view reports, and
+            handle orders
+          </li>
+          <li>
+            <strong>Admin:</strong> Full system access including user management
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Password confirmation validation
+  document.querySelector("form").addEventListener("submit", function (e) {
+    const password = document.getElementById("password").value;
+    const confirm = document.getElementById("password_confirm").value;
+
+    if (password !== confirm) {
+      e.preventDefault();
+      alert("Passwords do not match!");
+      return false;
+    }
+
+    if (password.length < 8) {
+      e.preventDefault();
+      alert("Password must be at least 8 characters long!");
+      return false;
+    }
+  });
+</script>
+{% endblock %}
