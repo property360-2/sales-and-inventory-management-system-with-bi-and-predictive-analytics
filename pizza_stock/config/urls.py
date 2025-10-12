@@ -8,6 +8,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', RedirectView.as_view(url='/reports/dashboard/', permanent=False), name='home'),
     path('users/', include('users.urls')),
+    path('branches/', include('branches.urls')),  # Add this
     path('inventory/', include('inventory.urls')),
     path('sales/', include('sales.urls')),
     path('orders/', include('orders.urls')),
