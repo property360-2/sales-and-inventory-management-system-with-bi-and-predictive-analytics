@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Branch - Pizza Stock Management{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">
+            <i class="fas fa-trash-alt mr-2"></i>
+            Delete Branch
+        </h1>
+        <p class="mt-2 text-sm text-gray-600">Permanently remove branch from the system</p>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-lg p-6">
+        <div class="bg-red-50 border-2 border-red-200 rounded-lg p-6 mb-6">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-4xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-xl font-bold text-red-900 mb-2">
+                        Warning: This action cannot be undone!
+                    </h3>
+                    <p class="text-red-800 mb-2">
+                        You are about to permanently delete this branch. This will affect:
+                    </p>
+                    <ul class="list-disc ml-5 text-red-800 space-y-1">
+                        {% if has_inventory %}<li>{{ branch.inventory.count }} inventory records will be deleted</li>{% endif %}
+                        {% if has_orders %}<li>{{ branch.orders.count }} orders will be deleted</li>{% endif %}
+                        {% if has_sales %}<li>{{ branch.sales.count }} sales records will be deleted</li>{% endif %}
+                        {% if has_users %}<li>{{ branch.users.count }} users will lose access to this branch</li>{% endif %}
+                        <li>All associated data will be permanently removed</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Branch Details -->
+        <div class="mb-6">
+            <h3 class="font-semibold text-gray-900 mb-4 text-lg">Branch to Delete:</h3>
+            <div class="bg-gray-50 rounded-lg p-6 border-2 border-gray-200">
+                <div class="space-y-3">
+                    <div>
+                        <h4 class="text-2xl font-bold text-gray-900">{{ branch.name }}</h4>
+                        <p class="text-sm text-gray-600">Code: {{ branch.code }}</p>
+                    </div>
+                    <div class="pt-3 border-t border-gray-300">
+                        <p class="text-sm text-gray-700"><i class="fas fa-map-marker-alt mr-2"></i>{{ branch.address }}</p>
+                        <p class="text-sm text-gray-700 mt-2"><i class="fas fa-phone mr-2"></i>{{ branch.phone }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Impact -->
+        {% if has_inventory or has_orders or has_sales or has_users %}
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+            <p class="text-sm text-yellow-800">
+                <i class="fas fa-database mr-2"></i>
+                <strong>Data Impact:</strong> This branch has existing data. Deleting it will permanently remove all associated records.
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Confirmation Form -->
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="flex space-x-4">
+                <button type="submit" 
+                        class="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 font-semibold text-lg transition"
+                        onclick="return confirm('Are you absolutely sure? This cannot be undone!')">
+                    <i class="fas fa-trash mr-2"></i>
+                    Yes, Delete Branch
+                </button>
+                <a href="{% url 'branches:list' %}" 
+                   class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-semibold text-lg text-center transition">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

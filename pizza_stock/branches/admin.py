@@ -1,3 +1,3 @@
 from django.contrib import admin
 
-# Register your models here.
+# Branch admin is registered in inventory app

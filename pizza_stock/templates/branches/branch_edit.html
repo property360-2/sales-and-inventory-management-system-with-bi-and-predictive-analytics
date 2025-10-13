@@ -1,0 +1,170 @@
+{% extends 'base.html' %} {% block title %}Edit Branch - Pizza Stock
+Management{% endblock %} {% block content %}
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      <i class="fas fa-edit mr-2"></i>
+      Edit Branch
+    </h1>
+    <p class="mt-2 text-sm text-gray-600">Update branch details and settings</p>
+  </div>
+
+  <div class="bg-white shadow-lg rounded-lg p-8">
+    <form method="POST">
+      {% csrf_token %}
+
+      <div class="space-y-6">
+        <div>
+          <label
+            for="name"
+            class="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Branch Name <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="name"
+            id="name"
+            required
+            value="{{ branch.name }}"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="e.g., Manila Main Branch"
+          />
+        </div>
+
+        <div>
+          <label
+            for="code"
+            class="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Branch Code <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="code"
+            id="code"
+            required
+            maxlength="20"
+            value="{{ branch.code }}"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 uppercase"
+            placeholder="e.g., MNL01"
+            style="text-transform: uppercase"
+          />
+          <p class="text-xs text-gray-500 mt-1">
+            Unique identifier (will be converted to uppercase)
+          </p>
+        </div>
+
+        <div>
+          <label
+            for="address"
+            class="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Address <span class="text-red-500">*</span>
+          </label>
+          <textarea
+            name="address"
+            id="address"
+            rows="3"
+            required
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Complete address"
+          >
+{{ branch.address }}</textarea
+          >
+        </div>
+
+        <div>
+          <label
+            for="phone"
+            class="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Phone Number <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="tel"
+            name="phone"
+            id="phone"
+            required
+            value="{{ branch.phone }}"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="e.g., 02-1234-5678"
+          />
+        </div>
+
+        <div>
+          <label
+            class="flex items-center p-4 bg-gray-50 rounded-lg cursor-pointer"
+          >
+            <input
+              type="checkbox"
+              name="is_active"
+              {%
+              if
+              branch.is_active
+              %}checked{%
+              endif
+              %}
+              class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+            />
+            <div class="ml-3">
+              <p class="font-semibold text-gray-900">Active Branch</p>
+              <p class="text-sm text-gray-600">
+                Branch is operational and accepting orders
+              </p>
+            </div>
+          </label>
+        </div>
+
+        {% if branch.qr_code %}
+        <div class="pt-4 border-t">
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >QR Code</label
+          >
+          <img
+            src="{{ branch.qr_code.url }}"
+            alt="Branch QR Code"
+            class="w-32 h-32"
+          />
+          <p class="text-xs text-gray-500 mt-1">
+            Automatically generated QR for this branch.
+          </p>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="flex space-x-4 pt-6 mt-6 border-t">
+        <button
+          type="submit"
+          class="flex-1 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold text-lg transition"
+        >
+          <i class="fas fa-save mr-2"></i>
+          Save Changes
+        </button>
+        <a
+          href="{% url 'branches:list' %}"
+          class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-semibold text-lg text-center transition"
+        >
+          <i class="fas fa-arrow-left mr-2"></i>
+          Back to Branches
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+    <div class="flex">
+      <i class="fas fa-exclamation-circle text-yellow-600 mr-3 mt-1"></i>
+      <div class="text-sm text-yellow-800">
+        <p class="font-semibold mb-1">Note:</p>
+        <ul class="list-disc ml-5 space-y-1">
+          <li>
+            Changing the branch code may affect existing inventory records.
+          </li>
+          <li>Ensure all details are correct before saving.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

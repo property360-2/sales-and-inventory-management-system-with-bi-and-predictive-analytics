@@ -1,0 +1,27 @@
+{% extends "base.html" %} 
+
+{% block title %}Branch QR Code{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-center min-h-[60vh]">
+  <h1 class="text-2xl font-semibold mb-4">QR Code for {{ branch.name }}</h1>
+
+  {% if branch.qr_code %}
+  <img
+    src="{{ branch.qr_code.url }}"
+    alt="QR Code"
+    class="w-64 h-64 mb-4 border rounded-lg shadow"
+  />
+  <p class="text-gray-600">Scan this code to view branch details.</p>
+  {% else %}
+  <p class="text-red-500">No QR code found for this branch.</p>
+  {% endif %}
+
+  <a
+    href="{% url 'branches:list' %}"
+    class="mt-6 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700"
+  >
+    Back to Branch List
+  </a>
+</div>
+{% endblock %}

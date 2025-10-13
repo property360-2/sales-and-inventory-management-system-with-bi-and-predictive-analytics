@@ -1,3 +1,4 @@
 from django.db import models
 
-# Create your models here.
+# This app doesn't have its own models
+# It uses models from the inventory app (Branch model)
