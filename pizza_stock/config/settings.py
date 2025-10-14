@@ -57,7 +57,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "users.middleware.BranchContextMiddleware",
-    "inventory.middleware.CurrentBranchMiddleware",  # Add this line
 ]
 
 ROOT_URLCONF = "config.urls"

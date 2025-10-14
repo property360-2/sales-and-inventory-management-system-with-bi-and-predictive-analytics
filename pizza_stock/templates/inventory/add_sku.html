@@ -186,12 +186,20 @@
 </div>
 
 <script>
+  // Toggle new category input
   function toggleNewCategoryInput() {
     const select = document.getElementById("category_id");
     const newCategoryBox = document.getElementById("new_category_box");
-    newCategoryBox.classList.toggle("hidden", select.value !== "new");
+    if (select.value === "new") {
+      newCategoryBox.classList.remove("hidden");
+      document.getElementById("new_category_name").required = true;
+    } else {
+      newCategoryBox.classList.add("hidden");
+      document.getElementById("new_category_name").required = false;
+    }
   }
 
+  // Image preview
   function previewImage(event) {
     const file = event.target.files[0];
     const preview = document.getElementById("imagePreview");
@@ -208,6 +216,7 @@
     }
   }
 
+  // Form submission
   document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("addSkuForm");
 
@@ -215,6 +224,9 @@
       e.preventDefault();
 
       const formData = new FormData(form);
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Creating...';
 
       try {
         const response = await fetch("{% url 'inventory:sku_list_api' %}", {
@@ -225,14 +237,17 @@
           },
         });
 
-        if (!response.ok) throw new Error("Failed to submit form");
-
         const data = await response.json();
-        alert("✅ Item added successfully!");
-        window.location.href = "{% url 'inventory:sku_list' %}";
+        if (!response.ok) throw new Error(data.error || "Failed to create item");
+
+        alert("✅ " + data.message);
+        window.location.href = "{% url 'inventory:add_inventory' %}";
       } catch (err) {
         console.error("❌ Error:", err);
-        alert("Failed to add item. Please check the console for details.");
+        alert("Failed to add item: " + err.message);
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-plus mr-2"></i> Create Menu Item';
       }
     });
   });

@@ -70,14 +70,44 @@
   </div>
 </div>
 
-<!-- AJAX Script -->
+<!-- Async JS -->
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const form = document.getElementById("filterForm");
+document.addEventListener("DOMContentLoaded", () => {
   const grid = document.getElementById("skuGrid");
+  const searchInput = document.getElementById("searchInput");
+  const categorySelect = document.getElementById("categorySelect");
+  const form = document.getElementById("filterForm");
 
-  // Fetch function
-  async function fetchFilteredData(url) {
+  // Debounce to limit requests while typing
+  function debounce(func, wait = 300) {
+    let timeout;
+    return function(...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  }
+
+  // Fetch filtered data
+  async function fetchFilteredData() {
+    const params = new URLSearchParams({
+      q: searchInput.value,
+      category: categorySelect.value
+    });
+
+    try {
+      const response = await fetch(`?${params.toString()}`, {
+        headers: { "X-Requested-With": "XMLHttpRequest" },
+      });
+      const data = await response.text();
+      grid.innerHTML = data;
+      attachPaginationListeners(); // re-bind pagination links
+    } catch (err) {
+      console.error("Error fetching data:", err);
+    }
+  }
+
+  // Fetch from pagination URL
+  async function fetchFilteredDataFromURL(url) {
     try {
       const response = await fetch(url, {
         headers: { "X-Requested-With": "XMLHttpRequest" },
@@ -86,26 +116,31 @@ document.addEventListener("DOMContentLoaded", function () {
       grid.innerHTML = data;
       attachPaginationListeners();
     } catch (err) {
-      console.error("Error fetching data:", err);
+      console.error("Error fetching pagination:", err);
     }
   }
 
-  // Submit filter form asynchronously
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const params = new URLSearchParams(new FormData(form)).toString();
-    fetchFilteredData(`?${params}`);
-  });
-
-  // Handle pagination links
+  // Bind pagination links
   function attachPaginationListeners() {
-    document.querySelectorAll("#skuGrid a.page-link").forEach((link) => {
+    document.querySelectorAll("#skuGrid a.page-link").forEach(link => {
       link.addEventListener("click", (e) => {
         e.preventDefault();
-        fetchFilteredData(link.getAttribute("href"));
+        fetchFilteredDataFromURL(link.href);
       });
     });
   }
+
+  // Form submission (button click)
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    fetchFilteredData();
+  });
+
+  // Live search
+  searchInput.addEventListener("input", debounce(fetchFilteredData, 300));
+
+  // Category change
+  categorySelect.addEventListener("change", fetchFilteredData);
 
   // Initial pagination binding
   attachPaginationListeners();

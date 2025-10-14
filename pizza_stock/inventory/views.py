@@ -13,6 +13,77 @@ from django.db import transaction
 from cloudinary.uploader import upload as cloudinary_upload
 from cloudinary.exceptions import Error as CloudinaryError
 
+
+
+@login_required
+def search_inventory(request):
+    """
+    Asynchronous search for inventory items.
+    Returns JSON containing all info needed to render table rows.
+    """
+    query = request.GET.get("q", "").strip()
+    branch = request.current_branch
+
+    inventory_qs = InventoryRecord.objects.filter(branch=branch)
+    if query:
+        inventory_qs = inventory_qs.filter(sku__name__icontains=query)
+
+    inventory_qs = inventory_qs.select_related("sku", "sku__category")[:50]
+
+    results = []
+
+    for item in inventory_qs:
+        # Determine status
+        if item.quantity == 0:
+            status_text = "Out of Stock"
+            status_icon = "fas fa-times-circle"
+            status_color = "bg-red-100 text-red-800"
+            quantity_color = "text-red-600"
+        elif item.is_low_stock:
+            status_text = "Low Stock"
+            status_icon = "fas fa-exclamation-triangle"
+            status_color = "bg-yellow-100 text-yellow-800"
+            quantity_color = "text-yellow-600"
+        else:
+            status_text = "In Stock"
+            status_icon = "fas fa-check-circle"
+            status_color = "bg-green-100 text-green-800"
+            quantity_color = "text-green-600"
+
+        # Actions
+        if request.user.is_manager:
+            actions = [
+                {
+                    "url": f"/inventory/restock/{item.sku.id}/",
+                    "text": "Restock",
+                    "icon": "fas fa-box-open",
+                    "color": "text-green-600 hover:text-green-900"
+                },
+                {
+                    "url": f"/inventory/adjust_stock/{item.sku.id}/",
+                    "text": "Adjust",
+                    "icon": "fas fa-edit",
+                    "color": "text-indigo-600 hover:text-indigo-900"
+                }
+            ]
+        else:
+            actions = [{"text": "Manager only", "color": "text-gray-400"}]
+
+        results.append({
+            "id": item.id,
+            "name": item.sku.name,
+            "price": str(item.sku.price),
+            "category": item.sku.category.name,
+            "quantity": item.quantity,
+            "safety_stock": item.safety_stock,
+            "status_text": status_text,
+            "status_icon": status_icon,
+            "status_color": status_color,
+            "quantity_color": quantity_color,
+            "actions": actions,
+        })
+
+    return JsonResponse(results, safe=False, json_dumps_params={'cls': DjangoJSONEncoder})
 @login_required
 def inventory_dashboard(request):
     """Main inventory overview"""
@@ -88,17 +159,28 @@ def add_sku(request):
             description = request.POST.get('description', '').strip()
             category_id = request.POST.get('category_id')
             new_category_name = request.POST.get('new_category_name', '').strip()
-            price = request.POST.get('price', '0')
-            image = request.FILES.get('image')  # ✅ handle image upload
+            price_str = request.POST.get('price', '').strip()
+            image = request.FILES.get('image')
 
             # Validation
             if not name:
                 messages.error(request, 'Item name is required.')
             elif not category_id and not new_category_name:
                 messages.error(request, 'Please select or create a category.')
-            elif not price or float(price) <= 0:
-                messages.error(request, 'Please enter a valid price.')
+            elif not price_str:
+                messages.error(request, 'Price is required.')
             else:
+                # Validate and convert price
+                from decimal import Decimal, InvalidOperation
+                try:
+                    price = Decimal(price_str)
+                    if price <= 0:
+                        messages.error(request, 'Price must be greater than 0.')
+                        return render(request, 'inventory/add_sku.html', {'categories': categories})
+                except (ValueError, InvalidOperation):
+                    messages.error(request, 'Invalid price format. Please enter a valid number.')
+                    return render(request, 'inventory/add_sku.html', {'categories': categories})
+
                 # Create or get category
                 if category_id == 'new' and new_category_name:
                     category, _ = Category.objects.get_or_create(
@@ -108,7 +190,7 @@ def add_sku(request):
                 else:
                     category = get_object_or_404(Category, id=category_id)
 
-                # ✅ Create SKU (with image)
+                # Create SKU
                 sku = SKU.objects.create(
                     name=name,
                     description=description,
@@ -126,8 +208,6 @@ def add_sku(request):
 
     context = {'categories': categories}
     return render(request, 'inventory/add_sku.html', context)
-
-
 @login_required
 def add_inventory(request):
     """Add one or multiple SKUs to a specific branch inventory"""
@@ -321,8 +401,6 @@ def branch_qr_code(request, branch_id):
     return render(request, 'inventory/branch_qr.html', context)
 
 
-
-
 @login_required
 @require_http_methods(["GET", "POST"])
 def sku_list_api(request):
@@ -333,15 +411,26 @@ def sku_list_api(request):
             description = request.POST.get("description", "").strip()
             category_id = request.POST.get("category_id")
             new_category_name = request.POST.get("new_category_name", "").strip()
-            price = request.POST.get("price", "0").strip()
+            price_str = request.POST.get("price", "").strip()
             image = request.FILES.get("image")
 
+            # Validation
             if not name:
                 return JsonResponse({"success": False, "error": "Name is required."}, status=400)
             if not category_id and not new_category_name:
                 return JsonResponse({"success": False, "error": "Category is required."}, status=400)
-            if not price or float(price) <= 0:
-                return JsonResponse({"success": False, "error": "Invalid price."}, status=400)
+            
+            # Validate price more strictly
+            if not price_str:
+                return JsonResponse({"success": False, "error": "Price is required."}, status=400)
+            
+            try:
+                from decimal import Decimal
+                price = Decimal(price_str)
+                if price <= 0:
+                    return JsonResponse({"success": False, "error": "Price must be greater than 0."}, status=400)
+            except (ValueError, InvalidOperation):
+                return JsonResponse({"success": False, "error": "Invalid price format."}, status=400)
 
             # ✅ Handle category (existing or new)
             if category_id == "new" and new_category_name:
@@ -351,30 +440,30 @@ def sku_list_api(request):
             else:
                 category = get_object_or_404(Category, id=category_id)
 
-            # ✅ Upload image to Cloudinary (optional)
-            image_url = None
-            if image:
-                try:
-                    upload_result = cloudinary_upload(image)
-                    image_url = upload_result.get("secure_url")
-                except CloudinaryError as e:
-                    print("❌ Cloudinary upload failed:", e)
-
-            # ✅ Save SKU
+            # ✅ Create SKU with Django's ImageField (no Cloudinary needed here)
             with transaction.atomic():
-                SKU.objects.create(
+                sku = SKU.objects.create(
                     name=name,
                     description=description,
                     category=category,
                     price=price,
-                    image=image_url,
+                    image=image,  # Django handles file upload automatically
                     is_active=True
                 )
 
-            return JsonResponse({"success": True, "message": "SKU created successfully!"})
+            return JsonResponse({
+                "success": True, 
+                "message": "SKU created successfully!",
+                "sku_id": sku.id,
+                "sku_name": sku.name
+            })
 
+        except ValueError as e:
+            return JsonResponse({"success": False, "error": f"Invalid input: {str(e)}"}, status=400)
         except Exception as e:
             print("❌ SKU creation failed:", e)
+            import traceback
+            traceback.print_exc()
             return JsonResponse({"success": False, "error": str(e)}, status=500)
 
     # ✅ Handle GET (AJAX filtering)

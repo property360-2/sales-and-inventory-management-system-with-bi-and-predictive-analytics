@@ -12,6 +12,6 @@ urlpatterns = [
     path("adjust/<int:sku_id>/", views.adjust_stock, name="adjust_stock"),
     path("transactions/", views.transaction_history, name="transactions"),
     path("branch-qr/<int:branch_id>/", views.branch_qr_code, name="branch_qr"),
+    path('search/', views.search_inventory, name='search_inventory'),
     path("api/skus/", views.sku_list_api, name="sku_list_api"),
-
 ]

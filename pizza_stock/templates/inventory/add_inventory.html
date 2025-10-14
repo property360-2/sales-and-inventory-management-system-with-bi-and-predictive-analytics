@@ -1,5 +1,6 @@
-{% extends 'base.html' %} {% block title %}Add New Inventory - Pizza Stock
-Management{% endblock %} {% block content %}
+{% extends 'base.html' %}
+ {% block title %}Add New Inventory - Pizza Stock Management{% endblock %}
+  {% block content %}
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
   <div class="mb-8">
     <h1 class="text-3xl font-bold text-gray-900">
@@ -81,9 +82,9 @@ Management{% endblock %} {% block content %}
         />
 
         <div class="flex justify-between items-center mb-2">
-          <label class="block text-sm font-medium text-gray-700">
-            Filter by Category
-          </label>
+          <label class="block text-sm font-medium text-gray-700"
+            >Filter by Category</label
+          >
           <label
             class="flex items-center space-x-2 text-sm text-indigo-600 cursor-pointer"
           >
@@ -106,6 +107,7 @@ Management{% endblock %} {% block content %}
           {% endfor %}
         </select>
       </div>
+
       <!-- SKU Selection Grid -->
       <div
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
@@ -156,13 +158,47 @@ Management{% endblock %} {% block content %}
           </div>
           <div class="mt-2">
             <label class="block text-xs text-gray-700 mb-1">Quantity</label>
-            <input
-              type="number"
-              name="quantity_{{ sku.id }}"
-              min="0"
-              value="0"
-              class="quantity-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-            />
+            <div class="flex items-center space-x-2">
+              <!-- Manual input -->
+              <input
+                type="number"
+                name="quantity_{{ sku.id }}"
+                min="0"
+                value="0"
+                class="quantity-input w-16 px-2 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-center"
+              />
+              <!-- Quick-add buttons -->
+              <div class="flex space-x-1">
+                <button
+                  type="button"
+                  class="quick-add px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-xs"
+                  data-add="1"
+                >
+                  +1
+                </button>
+                <button
+                  type="button"
+                  class="quick-add px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-xs"
+                  data-add="5"
+                >
+                  +5
+                </button>
+                <button
+                  type="button"
+                  class="quick-add px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-xs"
+                  data-add="10"
+                >
+                  +10
+                </button>
+                <button
+                  type="button"
+                  class="quick-add px-2 py-1 bg-gray-200 rounded hover:bg-gray-300 text-xs"
+                  data-add="50"
+                >
+                  +50
+                </button>
+              </div>
+            </div>
           </div>
         </div>
         {% endfor %}
@@ -170,9 +206,9 @@ Management{% endblock %} {% block content %}
 
       <!-- Notes -->
       <div class="mt-6 mb-6">
-        <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
-          Notes (Optional)
-        </label>
+        <label for="notes" class="block text-sm font-medium text-gray-700 mb-2"
+          >Notes (Optional)</label
+        >
         <textarea
           name="notes"
           id="notes"
@@ -234,6 +270,17 @@ Management{% endblock %} {% block content %}
           if (chk.closest(".sku-card").style.display !== "none") {
             chk.checked = this.checked;
           }
+        });
+      });
+
+      // Quick-add buttons functionality
+      document.querySelectorAll(".quick-add").forEach((btn) => {
+        btn.addEventListener("click", function () {
+          const addValue = parseInt(this.dataset.add, 10);
+          const input =
+            this.closest(".sku-card").querySelector(".quantity-input");
+          const current = parseInt(input.value, 10) || 0;
+          input.value = current + addValue;
         });
       });
 

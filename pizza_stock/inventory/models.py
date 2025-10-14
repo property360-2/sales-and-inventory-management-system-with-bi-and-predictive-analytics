@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 
+
 class Branch(models.Model):
     """Restaurant branch/location"""
     name = models.CharField(max_length=100)
