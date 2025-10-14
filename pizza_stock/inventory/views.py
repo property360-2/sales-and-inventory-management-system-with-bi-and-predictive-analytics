@@ -5,6 +5,13 @@ from django.db.models import Q, Sum, F
 from django.core.paginator import Paginator
 from .models import Branch, Category, SKU, InventoryRecord, StockTransaction
 from .utils import apply_stock_transaction, generate_branch_qr, get_low_stock_items
+from django.template.loader import render_to_string
+from django.http import JsonResponse
+from django.template.loader import render_to_string
+from django.views.decorators.http import require_http_methods
+from django.db import transaction
+from cloudinary.uploader import upload as cloudinary_upload
+from cloudinary.exceptions import Error as CloudinaryError
 
 @login_required
 def inventory_dashboard(request):
@@ -41,34 +48,136 @@ def inventory_dashboard(request):
 
 @login_required
 def sku_list(request):
-    """List all SKUs with search"""
     query = request.GET.get('q', '')
     category_id = request.GET.get('category', '')
-    
-    skus = SKU.objects.select_related('category').filter(is_active=True)
-    
+
+    skus = SKU.objects.all().select_related('category')
+
     if query:
-        skus = skus.filter(
-            Q(name__icontains=query) | Q(description__icontains=query)
-        )
-    
+        skus = skus.filter(name__icontains=query)
     if category_id:
         skus = skus.filter(category_id=category_id)
-    
-    categories = Category.objects.filter(is_active=True)
-    
-    paginator = Paginator(skus, 20)
+
+    paginator = Paginator(skus, 8)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     context = {
+        'categories': Category.objects.all(),
         'page_obj': page_obj,
-        'categories': categories,
         'query': query,
         'selected_category': category_id,
     }
-    
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'inventory/partials/sku_grid.html', context)
+
     return render(request, 'inventory/sku_list.html', context)
+@login_required
+def add_sku(request):
+    """Add new SKU (menu item) to the system"""
+    if not request.user.is_manager():
+        messages.error(request, 'You do not have permission to add menu items.')
+        return redirect('inventory:sku_list')
+
+    categories = Category.objects.filter(is_active=True)
+
+    if request.method == 'POST':
+        try:
+            name = request.POST.get('name', '').strip()
+            description = request.POST.get('description', '').strip()
+            category_id = request.POST.get('category_id')
+            new_category_name = request.POST.get('new_category_name', '').strip()
+            price = request.POST.get('price', '0')
+            image = request.FILES.get('image')  # ✅ handle image upload
+
+            # Validation
+            if not name:
+                messages.error(request, 'Item name is required.')
+            elif not category_id and not new_category_name:
+                messages.error(request, 'Please select or create a category.')
+            elif not price or float(price) <= 0:
+                messages.error(request, 'Please enter a valid price.')
+            else:
+                # Create or get category
+                if category_id == 'new' and new_category_name:
+                    category, _ = Category.objects.get_or_create(
+                        name=new_category_name,
+                        defaults={'is_active': True}
+                    )
+                else:
+                    category = get_object_or_404(Category, id=category_id)
+
+                # ✅ Create SKU (with image)
+                sku = SKU.objects.create(
+                    name=name,
+                    description=description,
+                    category=category,
+                    price=price,
+                    image=image,
+                    is_active=True
+                )
+
+                messages.success(request, f'Successfully created menu item: {sku.name}')
+                return redirect('inventory:add_inventory')
+
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+
+    context = {'categories': categories}
+    return render(request, 'inventory/add_sku.html', context)
+
+
+@login_required
+def add_inventory(request):
+    """Add one or multiple SKUs to a specific branch inventory"""
+    from inventory.models import SKU, InventoryRecord as Inventory, Branch
+
+    branches = Branch.objects.filter(is_active=True)
+    skus = SKU.objects.filter(is_active=True)
+    categories = {sku.category for sku in skus}
+
+    if request.method == 'POST':
+        branch_id = request.POST.get('branch_id')
+        notes = request.POST.get('notes', '')
+        selected_skus = request.POST.getlist('selected_skus')
+
+        if not branch_id or not selected_skus:
+            messages.error(request, "Please select a branch and at least one SKU.")
+            return redirect('inventory:add_inventory')
+
+        branch = get_object_or_404(Branch, id=branch_id)
+
+        added_count = 0
+        with transaction.atomic():
+            for sku_id in selected_skus:
+                quantity = int(request.POST.get(f'quantity_{sku_id}', 0))
+                if quantity < 0:
+                    quantity = 0
+
+                sku = get_object_or_404(SKU, id=sku_id)
+
+                inventory, created = Inventory.objects.get_or_create(
+                    branch=branch,
+                    sku=sku,
+                    defaults={'quantity': quantity, 'safety_stock': 10, 'notes': notes}
+                )
+
+                if not created:
+                    inventory.quantity += quantity
+                    inventory.save()
+
+                added_count += 1
+
+        messages.success(request, f"{added_count} item(s) successfully added to {branch.name}'s inventory.")
+        return redirect('inventory:dashboard')
+
+    context = {
+        'branches': branches,
+        'available_skus': skus,
+        'categories': categories,
+    }
+    return render(request, 'inventory/add_inventory.html', context)
 
 @login_required
 def restock_item(request, sku_id):
@@ -210,3 +319,84 @@ def branch_qr_code(request, branch_id):
     }
     
     return render(request, 'inventory/branch_qr.html', context)
+
+
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def sku_list_api(request):
+    # ✅ Handle creation via POST (AJAX form)
+    if request.method == "POST":
+        try:
+            name = request.POST.get("name", "").strip()
+            description = request.POST.get("description", "").strip()
+            category_id = request.POST.get("category_id")
+            new_category_name = request.POST.get("new_category_name", "").strip()
+            price = request.POST.get("price", "0").strip()
+            image = request.FILES.get("image")
+
+            if not name:
+                return JsonResponse({"success": False, "error": "Name is required."}, status=400)
+            if not category_id and not new_category_name:
+                return JsonResponse({"success": False, "error": "Category is required."}, status=400)
+            if not price or float(price) <= 0:
+                return JsonResponse({"success": False, "error": "Invalid price."}, status=400)
+
+            # ✅ Handle category (existing or new)
+            if category_id == "new" and new_category_name:
+                category, _ = Category.objects.get_or_create(
+                    name=new_category_name, defaults={"is_active": True}
+                )
+            else:
+                category = get_object_or_404(Category, id=category_id)
+
+            # ✅ Upload image to Cloudinary (optional)
+            image_url = None
+            if image:
+                try:
+                    upload_result = cloudinary_upload(image)
+                    image_url = upload_result.get("secure_url")
+                except CloudinaryError as e:
+                    print("❌ Cloudinary upload failed:", e)
+
+            # ✅ Save SKU
+            with transaction.atomic():
+                SKU.objects.create(
+                    name=name,
+                    description=description,
+                    category=category,
+                    price=price,
+                    image=image_url,
+                    is_active=True
+                )
+
+            return JsonResponse({"success": True, "message": "SKU created successfully!"})
+
+        except Exception as e:
+            print("❌ SKU creation failed:", e)
+            return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+    # ✅ Handle GET (AJAX filtering)
+    query = request.GET.get("q", "")
+    category_id = request.GET.get("category")
+    page_number = request.GET.get("page", 1)
+
+    skus = SKU.objects.select_related("category").all()
+    if query:
+        skus = skus.filter(Q(name__icontains=query) | Q(description__icontains=query))
+    if category_id:
+        skus = skus.filter(category_id=category_id)
+
+    paginator = Paginator(skus, 12)
+    page_obj = paginator.get_page(page_number)
+
+    html = render_to_string("inventory/partials/sku_grid.html", {"page_obj": page_obj, "user": request.user})
+
+    return JsonResponse({
+        "html": html,
+        "has_next": page_obj.has_next(),
+        "has_prev": page_obj.has_previous(),
+        "page": page_obj.number,
+        "total_pages": paginator.num_pages,
+    })

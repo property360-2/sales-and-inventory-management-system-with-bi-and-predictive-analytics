@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+{% block title %}Add New Menu Item - Pizza Stock Management{% endblock %}
+{% block content %}
+
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900">
+      <i class="fas fa-pizza-slice mr-2"></i>
+      Add New Menu Item (SKU)
+    </h1>
+    <p class="mt-2 text-sm text-gray-600">
+      Create a new pizza or product to add to the menu.
+    </p>
+  </div>
+
+  <div class="bg-white shadow-lg rounded-lg p-6">
+    <form id="addSkuForm" method="POST" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <!-- Item Name -->
+      <div class="mb-6">
+        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+          Item Name <span class="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          name="name"
+          id="name"
+          required
+          maxlength="100"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          placeholder="e.g., Pepperoni Pizza, Hawaiian Supreme"
+        />
+      </div>
+
+      <!-- Category -->
+      <div class="mb-6">
+        <label for="category_id" class="block text-sm font-medium text-gray-700 mb-2">
+          Category <span class="text-red-500">*</span>
+        </label>
+
+        <select
+          name="category_id"
+          id="category_id"
+          required
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          onchange="toggleNewCategoryInput()"
+        >
+          <option value="">Select a category...</option>
+          {% for category in categories %}
+          <option value="{{ category.id }}">{{ category.name }}</option>
+          {% endfor %}
+          <option value="new">➕ Add New Category</option>
+        </select>
+
+        <!-- Hidden input for new category -->
+        <div id="new_category_box" class="mt-4 hidden">
+          <label
+            for="new_category_name"
+            class="block text-sm font-medium text-gray-700 mb-2"
+          >
+            New Category Name <span class="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="new_category_name"
+            id="new_category_name"
+            maxlength="50"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="e.g., Beverages, Pasta Specials"
+          />
+        </div>
+      </div>
+
+      <!-- Price -->
+      <div class="mb-6">
+        <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
+          Price (₱) <span class="text-red-500">*</span>
+        </label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">₱</span>
+          <input
+            type="number"
+            name="price"
+            id="price"
+            required
+            min="0.01"
+            step="0.01"
+            class="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="0.00"
+          />
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="mb-6">
+        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+          Description (Optional)
+        </label>
+        <textarea
+          name="description"
+          id="description"
+          rows="4"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          placeholder="Describe the ingredients, toppings, or special features..."
+        ></textarea>
+      </div>
+
+      <!-- Image Upload -->
+      <div class="mb-6">
+        <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
+          Product Image (Optional)
+        </label>
+        <input
+          type="file"
+          name="image"
+          id="image"
+          accept="image/*"
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+          onchange="previewImage(event)"
+        />
+        <div class="mt-4">
+          <img
+            id="imagePreview"
+            src=""
+            alt="Preview"
+            class="hidden rounded-lg border border-gray-300 w-48 h-48 object-cover"
+          />
+        </div>
+      </div>
+
+      <!-- Info Box -->
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div class="flex">
+          <i class="fas fa-info-circle text-blue-600 mr-3 mt-1"></i>
+          <div class="text-sm text-blue-800">
+            <p class="font-semibold mb-1">What happens after creating this item?</p>
+            <ul class="list-disc ml-5 space-y-1">
+              <li>The menu item will be created in the system</li>
+              <li>You'll be redirected to add it to your branch's inventory</li>
+              <li>You can set initial stock quantity for your branch</li>
+              <li>Other branches can also add this item to their inventory</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex space-x-4">
+        <button
+          type="submit"
+          class="flex-1 bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 font-semibold"
+        >
+          <i class="fas fa-plus mr-2"></i> Create Menu Item
+        </button>
+        <a
+          href="{% url 'inventory:sku_list' %}"
+          class="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 font-semibold text-center"
+        >
+          <i class="fas fa-times mr-2"></i> Cancel
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Example Items -->
+  <div class="mt-8 bg-gray-50 rounded-lg p-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+      <i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Example Menu Items
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-white p-4 rounded-lg border border-gray-200">
+        <h4 class="font-semibold text-gray-900">Pepperoni Classic</h4>
+        <p class="text-sm text-gray-600 mt-1">Category: Classic Pizzas</p>
+        <p class="text-sm text-gray-600">Price: ₱299.00</p>
+        <p class="text-xs text-gray-500 mt-2">Classic pepperoni with mozzarella cheese</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg border border-gray-200">
+        <h4 class="font-semibold text-gray-900">Supreme Deluxe</h4>
+        <p class="text-sm text-gray-600 mt-1">Category: Premium Pizzas</p>
+        <p class="text-sm text-gray-600">Price: ₱449.00</p>
+        <p class="text-xs text-gray-500 mt-2">Loaded with premium toppings and cheese</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleNewCategoryInput() {
+    const select = document.getElementById("category_id");
+    const newCategoryBox = document.getElementById("new_category_box");
+    newCategoryBox.classList.toggle("hidden", select.value !== "new");
+  }
+
+  function previewImage(event) {
+    const file = event.target.files[0];
+    const preview = document.getElementById("imagePreview");
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.src = e.target.result;
+        preview.classList.remove("hidden");
+      };
+      reader.readAsDataURL(file);
+    } else {
+      preview.src = "";
+      preview.classList.add("hidden");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("addSkuForm");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch("{% url 'inventory:sku_list_api' %}", {
+          method: "POST",
+          body: formData,
+          headers: {
+            "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value,
+          },
+        });
+
+        if (!response.ok) throw new Error("Failed to submit form");
+
+        const data = await response.json();
+        alert("✅ Item added successfully!");
+        window.location.href = "{% url 'inventory:sku_list' %}";
+      } catch (err) {
+        console.error("❌ Error:", err);
+        alert("Failed to add item. Please check the console for details.");
+      }
+    });
+  });
+</script>
+
+{% endblock %}

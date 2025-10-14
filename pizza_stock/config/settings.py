@@ -1,6 +1,17 @@
 from pathlib import Path
 import os
 from decouple import config, Csv
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+
+cloudinary.config(
+    cloud_name="dol3qnntz",
+    api_key="738811694543669",
+    api_secret="Ss2HyjRrdkCa8_7m6Zykqt3FoG4",
+    secure=True,
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -33,6 +44,8 @@ INSTALLED_APPS = [
     "forecast.apps.ForecastConfig",
     "reports.apps.ReportsConfig",
     "branches.apps.BranchesConfig",  # Add this
+    "cloudinary",
+    "cloudinary_storage",
 ]
 
 MIDDLEWARE = [
@@ -44,6 +57,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "users.middleware.BranchContextMiddleware",
+    "inventory.middleware.CurrentBranchMiddleware",  # Add this line
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -107,6 +121,14 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
+
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": "dol3qnntz",
+    "API_KEY": "738811694543669",
+    "API_SECRET": "Ss2HyjRrdkCa8_7m6Zykqt3FoG4",
+}
+
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 # Media files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
