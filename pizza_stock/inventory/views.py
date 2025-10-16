@@ -14,6 +14,68 @@ from cloudinary.uploader import upload as cloudinary_upload
 from cloudinary.exceptions import Error as CloudinaryError
 
 
+
+@login_required
+def search_inventory(request):
+    """
+    Asynchronous search for inventory items.
+    Returns JSON containing all info needed to render table rows.
+    """
+    query = request.GET.get("q", "").strip()
+    branch = request.current_branch
+
+    inventory_qs = InventoryRecord.objects.filter(branch=branch)
+    if query:
+        inventory_qs = inventory_qs.filter(sku__name__icontains=query)
+
+    inventory_qs = inventory_qs.select_related("sku", "sku__category")[:50]
+
+    results = []
+
+    for item in inventory_qs:
+        # Determine status
+        if item.quantity == 0:
+            status_text = "Out of Stock"
+            status_icon = "fas fa-times-circle"
+            status_color = "bg-red-100 text-red-800"
+            quantity_color = "text-red-600"
+        elif item.is_low_stock():  # ✅ FIXED: Call the method with parentheses
+            status_text = "Low Stock"
+            status_icon = "fas fa-exclamation-triangle"
+            status_color = "bg-yellow-100 text-yellow-800"
+            quantity_color = "text-yellow-600"
+        else:
+            status_text = "In Stock"
+            status_icon = "fas fa-check-circle"
+            status_color = "bg-green-100 text-green-800"
+            quantity_color = "text-green-600"
+
+        # Actions HTML
+        if request.user.is_manager():  # ✅ FIXED: Call the method with parentheses
+            actions_html = f"""
+                <a href="/inventory/restock/{item.sku.id}/" class="text-green-600 hover:text-green-900 inline-flex items-center"><i class="fas fa-box-open mr-1"></i> Restock</a>
+                <a href="/inventory/adjust/{item.sku.id}/" class="text-indigo-600 hover:text-indigo-900 inline-flex items-center"><i class="fas fa-edit mr-1"></i> Adjust</a>
+            """
+        else:
+            actions_html = '<span class="text-gray-400">Manager only</span>'
+
+        results.append({
+            "id": item.id,
+            "name": item.sku.name,
+            "price": str(item.sku.price),
+            "category": item.sku.category.name,
+            "quantity": item.quantity,
+            "safety_stock": item.safety_stock,
+            "status_text": status_text,
+            "status_icon": status_icon,
+            "status_color": status_color,
+            "quantity_color": quantity_color,
+            "actions_html": actions_html,  # ✅ FIXED: Changed from 'actions' to 'actions_html'
+        })
+
+    return JsonResponse(results, safe=False, json_dumps_params={'cls': DjangoJSONEncoder})
+
+
 @login_required
 def inventory_dashboard(request):
     """Main inventory overview"""
