@@ -216,7 +216,7 @@ def pos_create_order(request):
             'order_number': order.order_number,
             'order_id': order.id,
             'total_amount': float(order.total_amount),
-            'receipt_url': f'/sales/pos/receipt/{order.id}/'
+            'receipt_url': f'/sales/pos/receipt/{order.id}/'  # FIXED URL
         })
         
     except ValueError as e:
@@ -226,8 +226,6 @@ def pos_create_order(request):
         import traceback
         traceback.print_exc()
         return JsonResponse({'success': False, 'error': 'Failed to create order'}, status=500)
-
-
 @login_required
 @require_http_methods(["POST"])
 def pos_quick_sale(request):
@@ -275,3 +273,15 @@ def pos_quick_sale(request):
     except Exception as e:
         print(f"Error in quick sale: {e}")
         return JsonResponse({'success': False, 'error': 'Failed to record sale'}, status=500)
+    
+@login_required
+def pos_receipt(request, order_id):
+    """Display printable receipt for POS order"""
+    order = get_object_or_404(Order, id=order_id)
+    
+    # Check access
+    if not request.user.can_access_branch(order.branch):
+        messages.error(request, 'Access denied.')
+        return redirect('sales:pos_dashboard')
+    
+    return render(request, 'sales/pos_receipt.html', {'order': order})

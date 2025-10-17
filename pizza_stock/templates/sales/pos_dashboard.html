@@ -403,5 +403,33 @@ function filterCategory(categoryId) {
         }
     });
 }
+// Keyboard shortcuts for POS
+document.addEventListener('keydown', function(e) {
+    // F1 - Complete Order
+    if (e.key === 'F1') {
+        e.preventDefault();
+        if (cart.length > 0) {
+            processOrder();
+        }
+    }
+    
+    // F2 - Clear Cart
+    if (e.key === 'F2') {
+        e.preventDefault();
+        clearCart();
+    }
+    
+    // Escape - Focus search
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        document.getElementById('searchMenu').focus();
+    }
+});
+
+// Show keyboard shortcuts hint
+console.log('POS Keyboard Shortcuts:');
+console.log('F1 - Complete Order');
+console.log('F2 - Clear Cart');
+console.log('ESC - Focus Search');
 </script>
 {% endblock %}

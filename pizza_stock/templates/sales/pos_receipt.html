@@ -1,0 +1,171 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt - Order #{{ order.order_number }}</title>
+    <style>
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+        }
+        body {
+            font-family: 'Courier New', monospace;
+            max-width: 300px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed #000;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .receipt-header h1 {
+            margin: 0;
+            font-size: 18px;
+        }
+        .receipt-header p {
+            margin: 2px 0;
+            font-size: 11px;
+        }
+        .receipt-body {
+            margin: 15px 0;
+        }
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        .item-name {
+            flex: 1;
+        }
+        .item-qty {
+            width: 30px;
+            text-align: center;
+        }
+        .item-price {
+            width: 60px;
+            text-align: right;
+        }
+        .totals {
+            border-top: 2px dashed #000;
+            padding-top: 10px;
+            margin-top: 10px;
+        }
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+        .total-row.grand {
+            font-size: 16px;
+            font-weight: bold;
+            border-top: 2px solid #000;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+        .receipt-footer {
+            text-align: center;
+            border-top: 2px dashed #000;
+            padding-top: 10px;
+            margin-top: 15px;
+            font-size: 11px;
+        }
+        .no-print {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .no-print button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .print-btn {
+            background-color: #4F46E5;
+            color: white;
+        }
+        .close-btn {
+            background-color: #6B7280;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-header">
+        <h1>{{ order.branch.name }}</h1>
+        <p>{{ order.branch.address }}</p>
+        <p>{{ order.branch.phone }}</p>
+        <p style="margin-top: 10px; font-weight: bold;">ORDER #{{ order.order_number }}</p>
+        <p>{{ order.created_at|date:"M d, Y H:i" }}</p>
+    </div>
+
+    <div class="receipt-body">
+        {% if order.customer_name %}
+        <p style="font-size: 12px; margin: 5px 0;"><strong>Customer:</strong> {{ order.customer_name }}</p>
+        {% endif %}
+        {% if order.customer_phone %}
+        <p style="font-size: 12px; margin: 5px 0;"><strong>Phone:</strong> {{ order.customer_phone }}</p>
+        {% endif %}
+        {% if order.table_number %}
+        <p style="font-size: 12px; margin: 5px 0;"><strong>Table:</strong> {{ order.table_number }}</p>
+        {% endif %}
+
+        <div style="border-top: 1px dashed #000; margin: 10px 0;"></div>
+
+        {% for item in order.items.all %}
+        <div class="item-row">
+            <span class="item-name">{{ item.sku.name }}</span>
+            <span class="item-qty">x{{ item.quantity }}</span>
+            <span class="item-price">₱{{ item.get_total }}</span>
+        </div>
+        {% if item.notes %}
+        <div style="font-size: 10px; margin-left: 10px; color: #666;">
+            Note: {{ item.notes }}
+        </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <div class="totals">
+        <div class="total-row">
+            <span>Subtotal:</span>
+            <span>₱{{ order.subtotal }}</span>
+        </div>
+        <div class="total-row">
+            <span>Tax (12%):</span>
+            <span>₱{{ order.tax }}</span>
+        </div>
+        <div class="total-row grand">
+            <span>TOTAL:</span>
+            <span>₱{{ order.total_amount }}</span>
+        </div>
+    </div>
+
+    <div class="receipt-footer">
+        <p><strong>Payment Method:</strong> {{ order.get_payment_method_display }}</p>
+        <p style="margin-top: 10px;">Thank you for your order!</p>
+        <p>Please come again!</p>
+    </div>
+
+    <div class="no-print">
+        <button class="print-btn" onclick="window.print()">
+            🖨️ Print Receipt
+        </button>
+        <button class="close-btn" onclick="window.close()">
+            ✖️ Close
+        </button>
+    </div>
+
+    <script>
+        // Auto-print on load (optional)
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>
