@@ -89,7 +89,15 @@
                     href="{% url 'sales:dashboard' %}"
                     class="text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition"
                   >
-                    <i class="fas fa-dollar-sign mr-1"></i> Sales
+                    <i class="fas fa-chart-bar mr-1"></i> Sales
+                  </a>
+
+                  <!-- Add this new POS link after the Sales link: -->
+                  <a
+                    href="{% url 'sales:pos_dashboard' %}"
+                    class="text-white hover:bg-white hover:bg-opacity-20 px-3 py-2 rounded-md text-sm font-medium transition"
+                  >
+                    <i class="fas fa-cash-register mr-1"></i> POS
                   </a>
                   {% if user.is_admin %}
                   <a
@@ -210,6 +218,7 @@
       };
     </script>
 
-    {% block extra_js %}{% endblock %}
+    {% block extra_js %}
+    {% endblock %}
   </body>
 </html>
